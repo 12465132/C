@@ -1,5 +1,9 @@
-#include <conio.h>
+//#include <conio.h>
 #include <iostream>
+
+using namespace std;
+
+
 class ClassA {
 public:
     int x;
@@ -24,26 +28,26 @@ public:
 int main()
 {
  
-    ClassD obj;
+    ClassA obj;
  
     // obj.a = 10;                   //Statement 1, Error
     // obj.a = 100;                 //Statement 2, Error
  
-    obj.ClassA::x = 10; // Statement 3
-    obj.ClassA::y = 10;
-    obj.ClassA::z = 10;
+    obj.x = 10; // Statement 3
+    obj.y = 10;
+    obj.z = 10;
  
-    obj.b = 20;
-    obj.c = 30;
-    obj.d = 40;
+    // obj.b = 20;
+    // obj.c = 30;
+    // obj.d = 40;
  
-    std::cout << "\n x from ClassB  : " << obj.ClassA::x;
-    std::cout << "\n y from ClassC  : " << obj.ClassA::y;
-    std::cout << "\n z from ClassC  : " << obj.ClassA::z;
+    std::cout << "\n x from ClassB  : " << obj.x;
+    std::cout << "\n y from ClassC  : " << obj.y;
+    std::cout << "\n z from ClassC  : " << obj.z;
  
-    std::cout << "\n B : " << obj.b;
-    std::cout << "\n C : " << obj.c;
-    std::cout << "\n D : " << obj.d;
+    //std::cout << "\n B : " << obj.b;
+    //std::cout << "\n C : " << obj.c;
+    //std::cout << "\n D : " << obj.d;
     return 0;
 
 
