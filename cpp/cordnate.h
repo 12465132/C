@@ -14,19 +14,21 @@ public:
     double y;
     double z;
 };
+
 class pvect : public ClassA {
 public:
 void pvect2vect(class vect c);
-    float b;
-};    
+//    float b;
+};
+
 class vect : public ClassA {
 public:
 void vect2pvect(class pvect c);
-
 };
+
 class cord : public ClassA {
 public:
-    float d;
+//    float d;
 
 };
 
