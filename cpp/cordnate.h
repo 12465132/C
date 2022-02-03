@@ -14,6 +14,7 @@ public:
     void printval(void);
     void inputval(void);
     void setval(int x1,int y1,int z1);
+    void addval(int x1,int y1,int z1);
     double x;
     double y;
     double z;
@@ -35,12 +36,10 @@ void vect2pvect(class  pvect * c);
 class cord : public ClassA {
 public:
 //float d;
-
 };
 
-class camerav : public vect, public cord {
-    
-};
+class camerav : public vect, public cord {   };
+
 class sphere : public vect {
 float d;
 };
@@ -73,6 +72,11 @@ void ClassA::setval(int x1,int y1,int z1){
     x=x1;
     y=y1;
     z=z1;
+}
+void ClassA::addval(int x1,int y1,int z1){
+    x+=x1;
+    y+=y1;
+    z+=z1;
 }
 void pvect::printvaldegree(){
     std::cout << "x : " << x << "\n";
