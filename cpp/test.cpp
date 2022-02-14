@@ -39,10 +39,10 @@ int main()
     sphere sphere;
     gvect g;
 
-    cam.setvect(1,1,0);
-    cam.setcord(0,0,0);
-    sphere.setvect(6,6,0);
-    sphere.setradius(1);
+    cam.setvect(-1,1,0);
+    cam.setcord(10,0,0);
+    sphere.setvect(5,5,1);
+    sphere.setradius(.6);
 
 //inputs
 
@@ -54,40 +54,51 @@ int main()
 //clock
 
 //main
-   cam.ofsetto(&camr,0,0);
-   camr.printvect();
-   camr.printcord();
-   cam.printvect();
-   cam.printcord();
+   // cam.ofsetto(&camr,0,0);
+   // camr.printvect();
+   // camr.printcord();
+   // cam.printvect();
+   // cam.printcord();
 
 
 
-            if(sphere.intersect(&camr)){
-               std::cout << "+";
-            }else{
-               std::cout << "-";
-            }
-            if(sphere.intersect(&cam)){
-               std::cout << "+";
-            }else{
-               std::cout << "-";
-            }
-//  std::cout << "\nworking\n";
-//     for (double i = 20; i > -20; i=i-1)
-//     {
-//         for (double j = -80;j < 80; j++){
+   //          if(sphere.intersect(&camr)){
+   //             std::cout << "+";
+   //          }else{
+   //             std::cout << "-";
+   //          }
+   //          if(sphere.intersect(&cam)){
+   //             std::cout << "+";
+   //          }else{
+   //             std::cout << "-";
+   //          }
+ std::cout << "\nworking\n";
+    for (double i = 20; i > -20; i=i-1)
+    {
+        for (double j = -80;j < 80; j++){
 
 
-//            cam.ofsetto(&camray,j/80,i/40);
+           cam.ofsetto(&camr,j/80,i/40);
    
-//             if(sphere.intersect(&camray)){
-//                std::cout << "+";
-//             }else{
-//                std::cout << "-";
-//             }
-//          }
-//       std::cout << "\n";
-//     }
+            if(sphere.cameraintersect(&camr,&g)){
+               sphere.cameraintersect(&camr,&g);
+               sphere.normalofray(&g);
+               g.normalize();
+               if(((g.z>=0))){
+                  std::cout << " ";
+               }else{
+                  std::cout << "█";
+               }
+            }else{
+               if(camr.z<=0){
+                  std::cout << "▄";
+               }else{
+                  std::cout << "░";
+               }
+            }
+         }
+      std::cout << "\n";
+    }
 
 
  
@@ -109,6 +120,6 @@ int main()
  
 
 
- std::cout << "complete";
+ std::cout <<"done";
 return 0;
 }
