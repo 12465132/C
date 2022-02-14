@@ -183,6 +183,7 @@ if(
 t->setvect( s4x , s4y , s4z );
 t->setcord(c->cx,c->cy,c->cz);
 dist = c->vect::dist(t);
+
 if (final<r){
     return true;
 }else{
@@ -192,8 +193,7 @@ if (final<r){
 t->setvect( NAN, NAN, NAN);
 t->setcord( NAN, NAN, NAN);
 dist = c->vect::dist(t);
-return false
-;
+return false;
 
 }
 
@@ -323,12 +323,13 @@ void sphere::normalofray(gvect * c){
 double storex = (c->x+c->cx);
 double storey = (c->y+c->cy);
 double storez = (c->x+c->cz);
-c->cx = x;
-c->cy = y;
-c->cz = z;
 c->x  = storex-x;
 c->y  = storey-y;
 c->z  = storez-z;
+c->cx = x;
+c->cy = y;
+c->cz = z;
+
 
 }
 long long digits(long long id,int n)
