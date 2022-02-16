@@ -39,10 +39,10 @@ int main()
     sphere sphere;
     gvect g,s;
 
-    cam.setvect(1,1,0);
-    cam.setcord(0,0,0);
-    sphere.setvect(5,5,-.5);
-    sphere.setradius(2);
+    cam.setvect(-1,1,0);
+    cam.setcord(10,0,0);
+    sphere.setvect(5,5,1);
+    sphere.setradius(1);
 
 //inputs
 
@@ -72,31 +72,29 @@ int main()
    //          }else{
    //             std::cout << "-";
    //          }
- std::cout << "\nworking\n";
-    for (double i = 20; i > -20; i=i-1)
+    for (double i = 200; i > -200; i=i-1)
     {
-        for (double j = -80;j < 80; j++){
+        for (double j = -800;j < 800; j++){
 
 
-           cam.ofsetto(&camr,j/80,i/40);
+           cam.ofsetto(&camr,j/800,i/200);
    
             if(sphere.cameraintersect(&camr,&g)){
                sphere.cameraintersect(&camr,&g);
                 sphere.normalofray(&g,&s);
                if(((s.z<=0))){
-                  std::cout << " ";
+                  SetPixel(hdc,j,i,shadow);
                }else{
-                  std::cout << "2";
+                  SetPixel(hdc,j,i,sphere1);
                }
             }else{
-               if(camr.z<0){
-                  std::cout << "8";
+               if(camr.z<=0){
+                  SetPixel(hdc,j,i,floor);
                }else{
-                  std::cout << "1";
+                  SetPixel(hdc,j,i,sky);
                }
             }
          }
-      std::cout << "\n";
     }
 
 
@@ -116,9 +114,3 @@ int main()
     << time_taken << setprecision(5);
    cout << " sec " << endl;
 //clock end
- 
-
-
- std::cout <<"done";
-return 0;
-}

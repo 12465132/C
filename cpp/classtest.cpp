@@ -37,12 +37,12 @@ int main()
     camerav cam;
     camerav camr;
     sphere sphere;
-    gvect g;
+    gvect g,s;
 
-    cam.setvect(1,1,0);
+    cam.setvect(2,2,-1);
     cam.setcord(0,0,0);
-    sphere.setvect(6,6,0);
-    sphere.setradius(1);
+    sphere.setvect(5,5,0);
+    sphere.setradius(3);
 
 //inputs
 
@@ -54,24 +54,29 @@ int main()
 //clock
 
 //main
-   cam.ofsetto(&camr,0,0);
-   camr.printvect();
-   camr.printcord();
-   cam.printvect();
-   cam.printcord();
+   // camr.printvect();
+   // camr.printcord();
+   // cam.printvect();
+   // cam.printcord();
+   sphere.cameraintersect(&cam,&g);
+   sphere.normalofray(&g,&s);
+   g.printvect();
+   g.printcord();
+   sphere.printvect();
+   s.printvect();
+   s.printcord();
 
-
-
-            if(sphere.intersect(&camr)){
-               std::cout << "+";
+            if(((g.z<=0))){
+               std::cout << "+1";
             }else{
-               std::cout << "-";
+               std::cout << "-1";
             }
             if(sphere.intersect(&cam)){
-               std::cout << "+";
+               std::cout << "+12";
             }else{
-               std::cout << "-";
+               std::cout << "-12";
             }
+
 //  std::cout << "\nworking\n";
 //     for (double i = 20; i > -20; i=i-1)
 //     {

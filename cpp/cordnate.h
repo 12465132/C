@@ -74,7 +74,12 @@ void inputradius(void);
 void setradius(double r1);
 void printdist();
 void ofsetcam(double x1,double y1);
-void normalofray(gvect * c);
+void normalofray(gvect * c,gvect * n);
+};
+
+class light : public vect {
+    public:
+
 };
 
 void ClassA::printvect(){
@@ -172,13 +177,13 @@ double s4y = (((DT*(c->y))/(pow(N,2)))-((BS*(c->y))/N));
 double s4z = (((DT*(c->z))/(pow(N,2)))-((BS*(c->z))/N));
 
 ////////////////////////////////////////
-//debug spot
+
 ////////////////////////////////////////
 
 if(
-(std::signbit(s4x) == std::signbit(c->x)) && 
-(std::signbit(s4y) == std::signbit(c->y)) && 
-(std::signbit(s4z) == std::signbit(c->z))){
+(samesign(s4x,c->x)) && 
+(samesign(s4y,c->y)) && 
+(samesign(s4z,c->z))){
 
 t->setvect( s4x , s4y , s4z );
 t->setcord(c->cx,c->cy,c->cz);
@@ -204,25 +209,25 @@ return false;
 std::cout << "\n" << pow(s3x,2);
 std::cout << "\n" << pow(s3y,2);
 std::cout << "\n" << pow(s3z,2) << "\n";
-std::cout << "\nsx= " << sx;
-std::cout << "\nsy= " << sy;
-std::cout << "\nsz= " << sz << "\n";
 std::cout << "\n" << (c->x);
 std::cout << "\n" << (c->y);
 std::cout << "\n" << (c->z) << "\n";
+std::cout << "\nsx= " << sx;
+std::cout << "\nsy= " << sy;
+std::cout << "\nsz= " << sz << "\n";
 std::cout << "\ns2x= " << s2x;
 std::cout << "\ns2y= " << s2y;
 std::cout << "\ns2z= " << s2z << "\n";
 std::cout << "\ns3x= " << s3x;
 std::cout << "\ns3y= " << s3y;
 std::cout << "\ns3z= " << s3z << "\n";
-std::cout << "\nsyx= " << s4x;
-std::cout << "\nsyy= " << s4y;
-std::cout << "\nsyz= " << s4z << "\n";
+std::cout << "\ns4x= " << s4x;
+std::cout << "\ns4y= " << s4y;
+std::cout << "\ns4z= " << s4z << "\n";
 std::cout << "\nN= " << N << "\nN^2= " << (pow(N,2)) << "\nDT= " << DT << "\nBS= " << BS << "\n";
-std::cout << "\nis same sign of x= " << (std::signbit(s4x) == std::signbit(c->x));
-std::cout << "\nis same sign of y= " << (std::signbit(s4y) == std::signbit(c->y));
-std::cout << "\nis same sign of z= " << (std::signbit(s4z) == std::signbit(c->z)) << "\n";
+std::cout << "\nis same sign of x= " << (samesign(s4x,c->x));
+std::cout << "\nis same sign of y= " << (samesign(s4y,c->y));
+std::cout << "\nis same sign of z= " << (samesign(s4z,c->z)) << "\n";
 std::cout << "\nintersect= " << (((DT*(c->x))/(pow(N,2)))-((BS*(c->x))/N));
 std::cout << "\nintersect= " << (((DT*(c->y))/(pow(N,2)))-((BS*(c->y))/N));
 std::cout << "\nintersect= " << (((DT*(c->z))/(pow(N,2)))-((BS*(c->z))/N)) << "\n";
@@ -319,18 +324,14 @@ double v2 = sqrt((x*x) + (y*y) + (z*z));
     s->scalar = sqrt((pow(s->x,2))+pow(s->y,2)+pow(s->z,2));
     
 }
-void sphere::normalofray(gvect * c){
-double storex = (c->x+c->cx);
-double storey = (c->y+c->cy);
-double storez = (c->x+c->cz);
-c->x  = storex-x;
-c->y  = storey-y;
-c->z  = storez-z;
-c->cx = x;
-c->cy = y;
-c->cz = z;
+void sphere::normalofray(gvect * c,gvect * n){
+double storex = (c->x+c->cx - x);
+double storey = (c->y+c->cy - y);
+double storez = (c->z+c->cz - z);
 
 
+n->setvect(storex , storey , storez);
+n->setcord( x , y , z );
 }
 long long digits(long long id,int n)
 {
@@ -370,9 +371,7 @@ return (((sx-ccx)*cx) + ((sy-ccy)*cy) + ((sz-ccz)*cz));
 }
 bool samesign(double sx,double sy)
 {
-// std::cout << (abs(sx)/sx) << "\n";
-// std::cout << (abs(sy)/sy) << "\n";
-    return ((abs(sx)/sx)==(abs(sy)/sy));
+    return ((fabs(sx)/sx)==(fabs(sy)/sy));
 }
 double degree2rad(double degree){
     return ((PI*degree)/180);
