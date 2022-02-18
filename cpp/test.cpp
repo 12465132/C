@@ -37,12 +37,14 @@ int main()
     camerav cam;
     camerav camr;
     sphere sphere;
-    gvect g,s;
+    gvect g,s,sun;
 
-    cam.setvect(1,1,0);
+  sun.setvect (-10, -10, 10);
+  sun.setcord (-10, -10, 10);
+    cam.setvect(2,2,-1);
     cam.setcord(0,0,0);
-    sphere.setvect(5,5,-.5);
-    sphere.setradius(2);
+    sphere.setvect(5,5,0);
+    sphere.setradius(3);
 
 //inputs
 
@@ -54,50 +56,47 @@ int main()
 //clock
 
 //main
-   // cam.ofsetto(&camr,0,0);
    // camr.printvect();
    // camr.printcord();
    // cam.printvect();
    // cam.printcord();
+   sphere.cameraintersect(&cam,&g);
+   sphere.normalofray(&g,&s);
+   g.printvect();
+   g.printcord();
+   sphere.printvect();
+   s.printvect();
+   s.printcord();
 
-
-
-   //          if(sphere.intersect(&camr)){
-   //             std::cout << "+";
-   //          }else{
-   //             std::cout << "-";
-   //          }
-   //          if(sphere.intersect(&cam)){
-   //             std::cout << "+";
-   //          }else{
-   //             std::cout << "-";
-   //          }
- std::cout << "\nworking\n";
-    for (double i = 20; i > -20; i=i-1)
-    {
-        for (double j = -80;j < 80; j++){
-
-
-           cam.ofsetto(&camr,j/80,i/40);
-   
-            if(sphere.cameraintersect(&camr,&g)){
-               sphere.cameraintersect(&camr,&g);
-                sphere.normalofray(&g,&s);
-               if(((s.z<=0))){
-                  std::cout << " ";
-               }else{
-                  std::cout << "2";
-               }
+            if(((g.z<=0))){
+               std::cout << "+1";
             }else{
-               if(camr.z<0){
-                  std::cout << "8";
-               }else{
-                  std::cout << "1";
-               }
+               std::cout << "-1";
             }
-         }
-      std::cout << "\n";
-    }
+            if(sphere.intersect(&cam)){
+               std::cout << "+12";
+            }else{
+               std::cout << "-12";
+            }
+            double speed =(s.anglevect(&sun));
+            std::cout << speed;
+
+//  std::cout << "\nworking\n";
+//     for (double i = 20; i > -20; i=i-1)
+//     {
+//         for (double j = -80;j < 80; j++){
+
+
+//            cam.ofsetto(&camray,j/80,i/40);
+   
+//             if(sphere.intersect(&camray)){
+//                std::cout << "+";
+//             }else{
+//                std::cout << "-";
+//             }
+//          }
+//       std::cout << "\n";
+//     }
 
 
  
@@ -119,6 +118,6 @@ int main()
  
 
 
- std::cout <<"done";
+ std::cout << "complete";
 return 0;
 }

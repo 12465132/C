@@ -1,4 +1,4 @@
-// name file cordnate.h
+//name file cordnate.h
 #ifndef cordnate_H
 #define cordnate_H
 #define PI 3.1415926535897932384626433832795028
@@ -13,6 +13,9 @@ double roundn(double x,int n);
 bool samesign(double sx,double sy);
 double rad2degree(double degree);
 double degree2rad(double degree);
+void praylight(double angle);
+char shadowascii(double l,double rfz);
+char raylight(double angle);
 class ClassA {
 public:
     void printvect(void);
@@ -59,9 +62,18 @@ class camerav : public vect{
     double px=40,py=160;
     double fovx,fovy;
     void ofsetto(camerav * s,double x1,double y1);
+    void camreaprint();
+    void camreasetpixel(double z1,double w1);
+    void camreasetfov(double z1,double w1);
+    void camreainputvect(void);
    };
 
-class gvect : public vect {   };
+class gvect : public vect {
+    public:
+    double anglevect(gvect * s);
+    
+    
+};
 
 class sphere : public vect {
     public:
@@ -287,28 +299,30 @@ void sphere::setradius(double r1){
 void sphere::printdist(){
     std::cout << "dist : " << dist << "\n";
 }
-// void ClassA::printvect(){
-//     std::cout << "px   :" << px << "\n";
-//     std::cout << "py   :" << py << "\n";
-//     std::cout << "fovx :" << fovx << "\n";
-//     std::cout << "fovy :" << fovy << "\n";
-// }
-// void camerav::camreainputvect(void){
-//     std::cout << "\npx   :" <<  "\n";
-//     std::cin >> px;
-//     std::cout << "py   :" <<  "\n";
-//     std::cin >> py;
-//     std::cout << "fovx :" <<  "\n";
-//     std::cin >> fovx;
-//     std::cout << "fovy :" <<  "\n";
-//     std::cin >> fovy;
-// }
-// void camerav::camreasetvect(double x1,double y1,double z1,double w1){
-// px =  x1;
-// py =  y1;
-// fovx =  z1;
-// fovy =  w1;
-// }
+void camerav::camreaprint(){
+    std::cout << "px   :" << px << "\n";
+    std::cout << "py   :" << py << "\n";
+    std::cout << "fovx :" << fovx << "\n";
+    std::cout << "fovy :" << fovy << "\n";
+}
+void camerav::camreainputvect(void){
+    std::cout << "\npx   :" <<  "\n";
+    std::cin >> px;
+    std::cout << "py   :" <<  "\n";
+    std::cin >> py;
+    std::cout << "fovx :" <<  "\n";
+    std::cin >> fovx;
+    std::cout << "fovy :" <<  "\n";
+    std::cin >> fovy;
+}
+void camerav::camreasetpixel(double x1,double y1){
+px =  x1;
+py =  y1;
+}
+void camerav::camreasetfov(double z1,double w1){
+fovx =  z1;
+fovy =  w1;
+}
 // void camerav::camreaaddvect(double x1,double y1,double z1){}
 void camerav::ofsetto(camerav * s,double xs,double ys){
 
@@ -333,6 +347,43 @@ double storez = (c->z+c->cz - z);
 n->setvect(storex , storey , storez);
 n->setcord( x , y , z );
 }
+double gvect::anglevect(gvect * s){
+
+double angle;
+double m2 = s->scalar;
+double m1 = scalar;
+double DP = dotproduct(s);
+    
+return (rad2degree(acos(DP/(m1*m2))));
+    
+}
+
+
+
+
+char shadowascii(double l,double rfz){
+char ascii[69] =
+{46, 39, 96, 94, 34, 44, 58, 59, 73, 108, 33, 105, 62, 60, 126, 43, 95, 45, 63,
+93, 91, 125, 123, 49, 41, 40, 124, 92, 47, 116, 102, 106, 114, 120, 110, 117,
+118, 99, 122, 88, 89, 85, 74, 67, 76, 81, 48, 79, 90, 109, 119, 113, 112, 100,
+98, 107, 104, 97, 111, 42, 35, 77,87, 38, 56, 37, 66, 64, 36};
+double storeascii = ((l/rfz)*69);
+return ascii[(int)storeascii];
+}
+
+void praylight(double angle){
+if (angle<=90){
+std::cout << shadowascii(((angle/90)*256),256);  
+}else{
+std::cout << " ";
+    return;
+}}
+char raylight(double angle){
+if (angle<=90){
+return shadowascii(((angle/90)*256),256);  
+}else{
+return char(32);
+}}
 long long digits(long long id,int n)
 {
 return id/pow10(n) % 10;//gets in divisual value using mod 10 once shifted

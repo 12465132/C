@@ -37,8 +37,10 @@ int main()
     camerav cam;
     camerav camr;
     sphere sphere;
-    gvect g,s;
+    gvect g,s,sun;
 
+  sun.setvect (-10, -10, 50);
+  sun.setcord (-10, -10, 50);
     cam.setvect(2,2,-1);
     cam.setcord(0,0,0);
     sphere.setvect(5,5,0);
@@ -76,6 +78,7 @@ int main()
             }else{
                std::cout << "-12";
             }
+            std::cout << (s.anglevect(&sun)/19);
 
 //  std::cout << "\nworking\n";
 //     for (double i = 20; i > -20; i=i-1)
