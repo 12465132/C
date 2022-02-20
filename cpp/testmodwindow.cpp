@@ -10,12 +10,30 @@ using namespace std;
 
 int main()
 {
-int x = 45;
-double d = 35.34534;
-
-cout << (int)d << "\n" << shadowascii(d);
-
-
+double x = -100;
+double d = 100;
+double mindist1=1,maxdist1=10000;
+//array
+if(!(x==d)){
+    if((x!=-1)&&((x<mindist1)||(x>maxdist1))){
+        x=-1;
+        if((d>mindist1)&&(d<maxdist1)){
+            if (x==-1){
+                x=d;
+        }else{
+            if (x>d){
+                x=d;
+            }}}
+    }else{
+        if((d>mindist1)&&(d<maxdist1)){
+            if (x==-1){
+                x=d;
+        }else{
+            if (x>d){
+                x=d;
+    }}}}}
+std::cout << x << std::endl;
+//array
 
 return 0;
 }

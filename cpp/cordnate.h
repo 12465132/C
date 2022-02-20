@@ -55,25 +55,25 @@ public:
 void vect2pvect(class  pvect * c);
 };
 
-
-
-class camerav : public vect{
-    public:
-    double px=40,py=160;
-    double fovx,fovy;
-    void ofsetto(camerav * s,double x1,double y1);
-    void camreaprint();
-    void camreasetpixel(double z1,double w1);
-    void camreasetfov(double z1,double w1);
-    void camreainputvect(void);
-   };
-
 class gvect : public vect {
     public:
     double anglevect(gvect * s);
     
     
 };
+
+class camerav : public vect{
+    public:
+    double px=40,py=160;
+    double fovx,fovy;
+    double mindist=1,maxdist=10000;
+    void ofsetto(camerav * s,double x1,double y1);
+    void camreaprint();
+    void camreasetpixel(double z1,double w1);
+    void camreasetfov(double z1,double w1);
+    void camreainputvect(void);
+    double distfromgvects(gvect * m);
+   };
 
 class sphere : public vect {
     public:
@@ -356,6 +356,13 @@ double DP = dotproduct(s);
     
 return (rad2degree(acos(DP/(m1*m2))));
     
+}
+double camerav::distfromgvects(gvect * m){
+double storex = (m->x+m->cx - cx);
+double storey = (m->y+m->cy - cy);
+double storez = (m->z+m->cz - cz);
+
+    return sqrt(pow(storex,2)+pow(storey,2)+pow(storez,2));
 }
 
 

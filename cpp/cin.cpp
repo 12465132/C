@@ -20,16 +20,24 @@ main ()
 
   camerav cam;
   camerav camr;
-  sphere sphere;
+  sphere sphere[3];
   gvect g, s, sun;
 
-  sun.inputvect();
-  cam.setvect(1, 1, 0);
-  cam.setcord(0, 0, 0);
-  cam.camreasetpixel(100,25);
-  sphere.setvect(5, 5, .5);
-  sphere.setradius(2);
+  sun.setvect(0,0,1);
+  cam.setvect(-1, -1, -1);
+  cam.setcord(15,15,15);
+  cam.camreasetpixel(800,200);
+  sphere[0].setvect(3,3, 1);
+  sphere[0].setradius(2);
+  sphere[1].setvect(-3,-3, 1);
+  sphere[1].setradius(2);
+  sphere[2].setvect(-4,4, -3);
+  sphere[2].setradius(4);
+  sphere[3].setvect(4,-4, 3);
+  sphere[3].setradius(4);
   sun.normalize();
+int numberofspheres = sizeof(sphere)/sizeof(sphere[0]),sphereindex=-1;
+double distancefromcam = -1;
 //inputs
 
 //clock
@@ -51,37 +59,54 @@ main ()
 
   std::cout << "\nworking\n";
   std::cout << setprecision(3);
-  for (double i = cam.py; i > -cam.py; i = i - 1)
-    {
-      for (double j = -cam.px; j < cam.px; j++)
-	{
-
-
-	  cam.ofsetto (&camr, j / cam.px, i / (cam.py*2));
-
-	  if (sphere.cameraintersect(&camr, &g))
-	    {
-	      sphere.cameraintersect (&camr, &g);
-	      sphere.normalofray (&g, &s);
-	      s.normalize();
-	       std::cout << shadowascii(((s.anglevect(&sun)/128)*69),69);
+  for (double i = cam.py; i > -cam.py; i = i - 1){
+    for (double j = -cam.px; j < cam.px; j++){
+	  cam.ofsetto (&camr, j / cam.px, i / (cam.py*2.11764706));
+    sphereindex = -1;
+    distancefromcam = -1;
+    for (int k = 0; k <= numberofspheres; k++){
+        	  if (sphere[k].cameraintersect(&camr, &g)){
+	          sphere[k].normalofray (&g, &s);
+              if(!(distancefromcam==g.scalar)){
+                  if((distancefromcam!=-1)&&((distancefromcam<camr.mindist)||(distancefromcam>camr.maxdist))){
+                      distancefromcam=-1;
+                      if((g.scalar>camr.mindist)&&(g.scalar<camr.maxdist)){
+                          if (distancefromcam==-1){
+                              distancefromcam=g.scalar;
+                              sphereindex=k;
+                              
+                      }else{
+                          if (distancefromcam>g.scalar){
+                              distancefromcam=g.scalar;
+                              sphereindex=k;
+                              
+                          }}}
+                  }else{
+                      if((g.scalar>camr.mindist)&&(g.scalar<camr.maxdist)){
+                          if (distancefromcam==-1){
+                              distancefromcam=g.scalar;
+                              sphereindex=k;
+                              
+                      }else{
+                          if (distancefromcam>g.scalar){
+                              distancefromcam=g.scalar;
+                              sphereindex=k;
+                              
+              }}}}}
 	      
 	    }
-	  else
-	    {
-	      if (camr.z < 0)
-		{
-		  std::cout << "8";
-		}
-	      else
-		{
-		  std::cout << "1";
-		}
-	    }
-	}
-	
-      std::cout << "\n";
     }
+	  if (sphereindex!=-1){
+        sphere[sphereindex].cameraintersect(&camr, &g);
+	      sphere[sphereindex].normalofray (&g, &s);
+	       std::cout << shadowascii(((s.anglevect(&sun)/256)*90),90);
+	      
+	    }else{
+	        std::cout << char(176);
+        }
+    }
+std::cout << "\n";
+}
     
     
 //     char ascii2[69] =
