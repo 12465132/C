@@ -398,12 +398,11 @@ return id/pow10(n) % 10;//gets in divisual value using mod 10 once shifted
 long long pow10(int n){
     long long result = 1;
 
-    for(int x=0;x<n;x++)// counts down amount of multiplacation
-    {
-        result*=10; // result * 10 = result
+    for(int x=0;x<n;x++)
+        result*=10;
     }
 
-    return result; //return
+    return result;
 }
 long long numDigits(long long n)
 {
@@ -413,12 +412,12 @@ long long numDigits(long long n)
 double dpow10(int n){
     double result = 1;
 
-    for(int x=0;x<n;x++)// counts down amount of multiplacation
+    for(int x=0;x<n;x++)
     {
-        result*=10; // result * 10 = result
+        result*=10; 
     }
 
-    return result; //return
+    return result; 
 }
 double roundn(double x,int n){
 long long result = 0;
