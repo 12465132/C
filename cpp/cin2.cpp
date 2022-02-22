@@ -1,6 +1,6 @@
 //#include <conio.h>
 #include <iostream>
-#include "cordnate.h"
+#include "cordnate2.h"
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -42,37 +42,37 @@ for (int i = 2; i < numberofspheres-2; i++){sphere[i].setvect(0,0, i+1);sphere[i
 
   std::cout << "\nworking\n";
   std::cout << setprecision(3);
-  for (double i = cam.py; i > -cam.py; i = i - 1){
-    for (double j = -cam.px; j < cam.px; j++){
+  for (float i = cam.py; i > -cam.py; i = i - 1){
+    for (float j = -cam.px; j < cam.px; j++){
 	  cam.ofsetto (&camr, j / cam.px, i / (cam.py*2.11764706));
     sphereindex = -1;
     distancefromcam = -1;
     for (int k = 0; k < numberofspheres; k++){
         	  if (sphere[k].cameraintersect(&camr, &g)){
 	          sphere[k].normalofray (&g, &s);
-              if(!(distancefromcam==g.scalar)){
+              if(!(distancefromcam==g.length)){
                   if((distancefromcam!=-1)&&((distancefromcam<camr.mindist)||(distancefromcam>camr.maxdist))){
                       distancefromcam=-1;
-                      if((g.scalar>camr.mindist)&&(g.scalar<camr.maxdist)){
+                      if((g.length>camr.mindist)&&(g.length<camr.maxdist)){
                           if (distancefromcam==-1){
-                              distancefromcam=g.scalar;
+                              distancefromcam=g.length;
                               sphereindex=k;
                               
                       }else{
-                          if (distancefromcam>g.scalar){
-                              distancefromcam=g.scalar;
+                          if (distancefromcam>g.length){
+                              distancefromcam=g.length;
                               sphereindex=k;
                               
                           }}}
                   }else{
-                      if((g.scalar>camr.mindist)&&(g.scalar<camr.maxdist)){
+                      if((g.length>camr.mindist)&&(g.length<camr.maxdist)){
                           if (distancefromcam==-1){
-                              distancefromcam=g.scalar;
+                              distancefromcam=g.length;
                               sphereindex=k;
                               
                       }else{
-                          if (distancefromcam>g.scalar){
-                              distancefromcam=g.scalar;
+                          if (distancefromcam>g.length){
+                              distancefromcam=g.length;
                               sphereindex=k;
                               
               }}}}}
@@ -97,7 +97,7 @@ std::cout << "\n";
 // 118, 99, 122, 88,89, 85, 74, 67, 76, 81, 48, 79, 90, 109, 119, 113, 112, 100,
 // 98, 107, 104, 97, 111, 42, 35, 77,87, 38, 56, 37, 66, 64, 36};
 //   std::cout << "\n" << shadowascii(1.879898,10) << ascii2[1] << ascii2[3] << ascii2[59];
-// for (double i=0;i<90;i++) {
+// for (float i=0;i<90;i++) {
 // std::cout <<char(raylight(i))<<"\n";
 // }
 //$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,"^`'.

@@ -4,42 +4,47 @@
 #define PI 3.1415926535897932384626433832795028
 #include <iostream>
 #include <cmath>
+#include <cstdint>
+#include <cstddef>
 
 long long pow10(int n);
 long long digits(long long id,int n);
 long long numDigits(long long n);
-double dpow10(int n);
-double roundn(double x,int n);
-bool samesign(double sx,double sy);
-double rad2degree(double degree);
-double degree2rad(double degree);
-void praylight(double angle);
-char shadowascii(double l,double rfz);
-char raylight(double angle);
+float dpow10(int n);
+float roundn(float x,int n);
+bool samesign(float sx,float sy);
+float rad2degree(float degree);
+float degree2rad(float degree);
+void praylight(float angle);
+char shadowascii(float l,float rfz);
+char raylight(float angle);
+float fast_inv_sqrt(float x);
+float inv_fast(float x);
 class ClassA {
 public:
     void printvect(void);
     void inputvect(void);
-    void setvect(double x1,double y1,double z1);
-    void addvect(double x1,double y1,double z1);
+    void setvect(float x1,float y1,float z1);
+    void addvect(float x1,float y1,float z1);
     void printcord(void);
     void inputcord(void);
-    void setcord(double x1,double y1,double z1);
-    void addcord(double x1,double y1,double z1);
-    double dist(ClassA * c);
+    void setcord(float x1,float y1,float z1);
+    void addcord(float x1,float y1,float z1);
+    float dist(ClassA * c);
     void pdist(ClassA * c);
     void normalizeto(ClassA * c);
-    double dotproduct(ClassA * c);
-    double tdotproduct(double x1,double y1,double z1);
+    float dotproduct(ClassA * c);
+    float tdotproduct(float x1,float y1,float z1);
     void normalize(void);
 
-    double x  = 0;
-    double y  = 0;
-    double z  = 0;
-    double cx = 0;
-    double cy = 0;
-    double cz = 0;
-    double scalar = sqrt((pow(x,2))+pow(y,2)+pow(z,2));
+    float x  = 0;
+    float y  = 0;
+    float z  = 0;
+    float cx = 0;
+    float cy = 0;
+    float cz = 0;
+    float scalar = fast_inv_sqrt((pow(x,2))+pow(y,2)+pow(z,2));
+    float length = sqrt((pow(x,2))+pow(y,2)+pow(z,2));
 };
 
 class pvect : public ClassA {
@@ -57,35 +62,35 @@ void vect2pvect(class  pvect * c);
 
 class gvect : public vect {
     public:
-    double anglevect(gvect * s);
-    double anglevect(gvect ** s);
+    float anglevect(gvect * s);
+    float anglevect(gvect ** s);
     
 };
 
 class camerav : public vect{
     public:
-    double px=40,py=160;
-    double fovx,fovy;
-    double mindist=1,maxdist=10000;
-    void ofsetto(camerav * s,double x1,double y1);
+    float px=40,py=160;
+    float fovx,fovy;
+    float mindist=1,maxdist=10000;
+    void ofsetto(camerav * s,float x1,float y1);
     void camreaprint();
-    void camreasetpixel(double z1,double w1);
-    void camreasetfov(double z1,double w1);
+    void camreasetpixel(float z1,float w1);
+    void camreasetfov(float z1,float w1);
     void camreainputvect(void);
-    double distfromgvects(gvect * m);
+    float distfromgvects(gvect * m);
    };
 
 class sphere : public vect {
     public:
-double r;
-double dist;
+float r;
+float dist;
 bool intersect(class  camerav * c);
 bool cameraintersect(class  camerav * c,class  gvect * t);
 void printradius(void);
 void inputradius(void);
-void setradius(double r1);
+void setradius(float r1);
 void printdist();
-void ofsetcam(double x1,double y1);
+void ofsetcam(float x1,float y1);
 void normalofray(gvect * c,gvect * n);
 };
 
@@ -107,19 +112,19 @@ void ClassA::inputvect(void){
     std::cout << "z :";
     std::cin >> z ;
     std::cout << "\n";
-    scalar = sqrt((pow(x,2))+pow(y,2)+pow(z,2));
+    scalar = fast_inv_sqrt((pow(x,2))+pow(y,2)+pow(z,2));
 }
-void ClassA::setvect(double x1,double y1,double z1){
+void ClassA::setvect(float x1,float y1,float z1){
     x=x1;
     y=y1;
     z=z1;
-    scalar = sqrt((pow(x,2))+pow(y,2)+pow(z,2));
+    scalar = fast_inv_sqrt((pow(x,2))+pow(y,2)+pow(z,2));
 }
-void ClassA::addvect(double x1,double y1,double z1){
+void ClassA::addvect(float x1,float y1,float z1){
     x+=x1;
     y+=y1;
     z+=z1;
-    scalar = sqrt((pow(x,2))+pow(y,2)+pow(z,2));
+    scalar = fast_inv_sqrt((pow(x,2))+pow(y,2)+pow(z,2));
 }
 void ClassA::printcord(){
     std::cout << "cx : " << cx << "\n";
@@ -134,19 +139,19 @@ void ClassA::inputcord(void){
     std::cout << "cz :";
     std::cin >> cz ;
     std::cout << "\n";
-    scalar = sqrt((pow(x,2))+pow(y,2)+pow(z,2));
+    scalar = fast_inv_sqrt((pow(x,2))+pow(y,2)+pow(z,2));
 }
-void ClassA::setcord(double x1,double y1,double z1){
+void ClassA::setcord(float x1,float y1,float z1){
     cx=x1;
     cy=y1;
     cz=z1;
-    scalar = sqrt((pow(x,2))+pow(y,2)+pow(z,2));
+    scalar = fast_inv_sqrt((pow(x,2))+pow(y,2)+pow(z,2));
 }
-void ClassA::addcord(double x1,double y1,double z1){
+void ClassA::addcord(float x1,float y1,float z1){
     cx+=x1;
     cy+=y1;
     cz+=z1;
-    scalar = sqrt((pow(x,2))+pow(y,2)+pow(z,2));
+    scalar = fast_inv_sqrt((pow(x,2))+pow(y,2)+pow(z,2));
 }
 void pvect::pvect2vect(vect * c) {
       c->x = sin(y) * cos (x);
@@ -163,7 +168,7 @@ void pvect::printvaldegree(){
     std::cout << "y : " << (y * 180)/PI << "\n";
     std::cout << "z : " << (z * 180)/PI  << "\n";
 }
-double ClassA::dist(ClassA * c){
+float ClassA::dist(ClassA * c){
    return sqrt((pow((x-c->x),2)+pow((y-c->y),2)+pow((z-c->z),2)));
 }
 void ClassA::pdist(ClassA * c){
@@ -171,22 +176,22 @@ void ClassA::pdist(ClassA * c){
 }
 bool sphere::cameraintersect(class  camerav * c,class  gvect * t){
 
-double N = c->scalar;
-double DT = dotproduct(c);
-double sx = (x-c->cx);
-double sy = (y-c->cy);
-double sz = (z-c->cz);
-double s2x = ((DT*(c->x))/(pow(N,2)));
-double s2y = ((DT*(c->y))/(pow(N,2)));
-double s2z = ((DT*(c->z))/(pow(N,2)));
-double s3x = sx - s2x;
-double s3y = sy - s2y;
-double s3z = sz - s2z;
-double final = sqrt(pow(s3x,2) + pow(s3y,2) + pow(s3z,2));
-double BS = sqrt( pow(r,2) - pow(sqrt(pow(s3x,2) + pow(s3y,2) + pow(s3z,2)) ,2));
-double s4x = (((DT*(c->x))/(pow(N,2)))-((BS*(c->x))/N));
-double s4y = (((DT*(c->y))/(pow(N,2)))-((BS*(c->y))/N));
-double s4z = (((DT*(c->z))/(pow(N,2)))-((BS*(c->z))/N));
+float N = c->scalar;
+float DT = dotproduct(c);
+float sx = (x-c->cx);
+float sy = (y-c->cy);
+float sz = (z-c->cz);
+float s2x = ((DT*(c->x))*(pow(N,2)));
+float s2y = ((DT*(c->y))*(pow(N,2)));
+float s2z = ((DT*(c->z))*(pow(N,2)));
+float s3x = sx - s2x;
+float s3y = sy - s2y;
+float s3z = sz - s2z;
+float final = sqrt(pow(s3x,2) + pow(s3y,2) + pow(s3z,2));
+float BS = sqrt( pow(r,2) - pow(sqrt(pow(s3x,2) + pow(s3y,2) + pow(s3z,2)) ,2));
+float s4x = (((DT*(c->x))*(pow(N,2)))-((BS*(c->x))*N));
+float s4y = (((DT*(c->y))*(pow(N,2)))-((BS*(c->y))*N));
+float s4z = (((DT*(c->z))*(pow(N,2)))-((BS*(c->z))*N));
 
 ////////////////////////////////////////
 
@@ -248,11 +253,11 @@ std::cout << "\nintersect= " << (((DT*(c->z))/(pow(N,2)))-((BS*(c->z))/N)) << "\
 */
 }
 bool sphere::intersect(class  camerav * c){
-double DT = dotproduct(c);
-double final =sqrt(
-    pow(((x-c->cx) - ((DT*(c->x))/(pow(c->scalar,2)))),2) + 
-    pow(((y-c->cy) - ((DT*(c->y))/(pow(c->scalar,2)))),2) + 
-    pow(((z-c->cz) - ((DT*(c->z))/(pow(c->scalar,2)))),2));
+float DT = dotproduct(c);
+float final =sqrt(
+    pow(((x-c->cx) - ((DT*(c->x))*(pow(c->scalar,2)))),2) + 
+    pow(((y-c->cy) - ((DT*(c->y))*(pow(c->scalar,2)))),2) + 
+    pow(((z-c->cz) - ((DT*(c->z))*(pow(c->scalar,2)))),2));
 
 if (final<r){
     return true;
@@ -260,24 +265,24 @@ if (final<r){
     return false;
 }
 }
-double ClassA::dotproduct(ClassA * c){
+float ClassA::dotproduct(ClassA * c){
 return (((x-c->cx)*c->x) + ((y-c->cy)*c->y) + ((z-c->cz)*c->z));
 }
 
-double ClassA::tdotproduct(double x1,double y1,double z1){
+float ClassA::tdotproduct(float x1,float y1,float z1){
 return ((x*x1) + (y*y1) + (z*z1));
 }
 void ClassA::normalizeto(ClassA * c){
-double store = sqrt((pow(x,2))+pow(y,2)+pow(z,2));
+float store = sqrt((pow(x,2))+pow(y,2)+pow(z,2));
 c->x = (x/store);
 c->y = (y/store);
 c->z = (z/store);
 }
 void ClassA::normalize(void){
-double store = sqrt((pow(x,2))+pow(y,2)+pow(z,2)); 
-x = (x/store);
-y = (y/store);
-z = (z/store);
+float store = fast_inv_sqrt((pow(x,2))+pow(y,2)+pow(z,2)); 
+x = (x*store);
+y = (y*store);
+z = (z*store);
 }
 void sphere::printradius(){
     std::cout << "radius : " << r << "\n";
@@ -285,9 +290,9 @@ void sphere::printradius(){
 void sphere::inputradius(void){
     std::cout << "\n" << "radius : " << "\n";;
     std::cin >> r ;
-    scalar = sqrt((pow(x,2))+pow(y,2)+pow(z,2));
+    scalar = fast_inv_sqrt((pow(x,2))+pow(y,2)+pow(z,2));
 }
-void sphere::setradius(double r1){
+void sphere::setradius(float r1){
     r=r1;
 }
 void sphere::printdist(){
@@ -309,53 +314,53 @@ void camerav::camreainputvect(void){
     std::cout << "fovy :" <<  "\n";
     std::cin >> fovy;
 }
-void camerav::camreasetpixel(double x1,double y1){
+void camerav::camreasetpixel(float x1,float y1){
 px =  x1;
 py =  y1;
 }
-void camerav::camreasetfov(double z1,double w1){
+void camerav::camreasetfov(float z1,float w1){
 fovx =  z1;
 fovy =  w1;
 }
-// void camerav::camreaaddvect(double x1,double y1,double z1){}
-void camerav::ofsetto(camerav * s,double xs,double ys){
+// void camerav::camreaaddvect(float x1,float y1,float z1){}
+void camerav::ofsetto(camerav * s,float xs,float ys){
 
-double v  = sqrt((x*x) + (y*y));
-double v2 = sqrt((x*x) + (y*y) + (z*z));
+float v  = fast_inv_sqrt((x*x) + (y*y));
+float v2 = fast_inv_sqrt((x*x) + (y*y) + (z*z));
 
-    s->x  = x + ((((-1)*(x*z))*(ys))/(v*v2)) - ((y*xs)/v);
-    s->y  = y + ((((-1)*(y*z))*(ys))/(v*v2)) + ((x*xs)/v);
-    s->z  = z + (( v * ys )/ v2);
+    s->x  = x + ((((-1)*(x*z))*(ys))*(v*v2)) - ((y*xs)*v);
+    s->y  = y + ((((-1)*(y*z))*(ys))*(v*v2)) + ((x*xs)*v);
+    s->z  = z + (( v * ys )* v2);
     s->cx = cx;
     s->cy = cy;
     s->cz = cz;
-    s->scalar = sqrt((pow(s->x,2))+pow(s->y,2)+pow(s->z,2));
+    s->scalar = fast_inv_sqrt((pow(s->x,2))+pow(s->y,2)+pow(s->z,2));
     
 }
 void sphere::normalofray(gvect * c,gvect * n){
-double storex = (c->x+c->cx - x);
-double storey = (c->y+c->cy - y);
-double storez = (c->z+c->cz - z);
+float storex = (c->x+c->cx - x);
+float storey = (c->y+c->cy - y);
+float storez = (c->z+c->cz - z);
 
 
 n->setvect(storex , storey , storez);
 n->setcord( x , y , z );
 }
 
-double gvect::anglevect(gvect * s){
+float gvect::anglevect(gvect * s){
 
-double angle;
-double m2 = s->scalar;
-double m1 = scalar;
-double DP = dotproduct(s);
+float angle;
+float m2 = s->scalar;
+float m1 = scalar;
+float DP = dotproduct(s);
     
-return (rad2degree(acos(DP/(m1*m2))));
+return (rad2degree(acos(DP*(m1*m2))));
     
 }
-double camerav::distfromgvects(gvect * m){
-double storex = (m->x+m->cx - cx);
-double storey = (m->y+m->cy - cy);
-double storez = (m->z+m->cz - cz);
+float camerav::distfromgvects(gvect * m){
+float storex = (m->x+m->cx - cx);
+float storey = (m->y+m->cy - cy);
+float storez = (m->z+m->cz - cz);
 
     return sqrt(pow(storex,2)+pow(storey,2)+pow(storez,2));
 }
@@ -363,72 +368,74 @@ double storez = (m->z+m->cz - cz);
 
 
 
-char shadowascii(double l,double rfz){
+char shadowascii(float l,float rfz){
 char ascii[69] =
 {46, 39, 96, 94, 34, 44, 58, 59, 73, 108, 33, 105, 62, 60, 126, 43, 95, 45, 63,
 93, 91, 125, 123, 49, 41, 40, 124, 92, 47, 116, 102, 106, 114, 120, 110, 117,
 118, 99, 122, 88, 89, 85, 74, 67, 76, 81, 48, 79, 90, 109, 119, 113, 112, 100,
 98, 107, 104, 97, 111, 42, 35, 77,87, 38, 56, 37, 66, 64, 36};
-double storeascii = ((l/rfz)*69);
+float storeascii = ((l/rfz)*69);
 return ascii[(int)storeascii];
 }
-
-void praylight(double angle){
+void praylight(float angle){
 if (angle<=90){
 std::cout << shadowascii(((angle/90)*256),256);  
 }else{
 std::cout << " ";
     return;
 }}
-char raylight(double angle){
+char raylight(float angle){
 if (angle<=90){
 return shadowascii(((angle/90)*256),256);  
 }else{
 return char(32);
 }}
-long long digits(long long id,int n)
-{
-return id/pow10(n) % 10;//gets in divisual value using mod 10 once shifted
-}
-long long pow10(int n){
-    long long result = 1;
-
-    for(int x=0;x<n;x++){
-        result*=10;
-    }
-
-    return result;
-}
-long long numDigits(long long n)
-{
-    if (n < 10) return 1;
-    return 1 + numDigits(n / 10);
-}
-double dpow10(int n){
-    double result = 1;
-
-    for(int x=0;x<n;x++)
-    {
-        result*=10; 
-    }
-
-    return result; 
-}
-double roundn(double x,int n){
-long long result = 0;
-return (ceil(x * dpow10(n)) / dpow10(n));
-}
-double sdotproduct(double sx,double sy,double sz,double cx,double cy,double cz,double ccx,double ccy,double ccz){
-return (((sx-ccx)*cx) + ((sy-ccy)*cy) + ((sz-ccz)*cz));
-}
-bool samesign(double sx,double sy)
+bool samesign(float sx,float sy)
 {
     return ((fabs(sx)/sx)==(fabs(sy)/sy));
 }
-double degree2rad(double degree){
+float degree2rad(float degree){
     return ((PI*degree)/180);
 }
-double rad2degree(double degree){
+float rad2degree(float degree){
     return ((180*degree)/PI);
+}
+float fast_inv_sqrt(float x)
+{
+    float y = x; // y holds the current guess for 1/sqrt(x)
+    uint32_t *i = reinterpret_cast<uint32_t *>(&y); // i points to current guess y
+
+    const uint32_t exp_mask = 0x7F800000; // 0xFF<<23
+    const uint32_t magic_number = 0x5f000000; // 190<<23
+
+    // initial guess using magic number
+    *i = magic_number - ((*i >> 1) & exp_mask);
+
+    // refine guess using small number of Newton iterations
+    const size_t num_newton_iter = 2;
+    for (size_t i = 0; i < num_newton_iter; ++i)
+    {
+        y = (x * y * y + 1) / (2 * x * y);
+    }
+
+    return y;
+}
+float inv_fast(float x) {
+    union { float f; int i; } v;
+    float w, sx;
+    int m;
+
+    sx = (x < 0) ? -1:1;
+    x = sx * x;
+
+    v.i = (int)(0x7EF127EA - *(uint32_t *)&x);
+    w = x * v.f;
+
+    // Efficient Iterative Approximation Improvement in horner polynomial form.
+    v.f = v.f * (2 - w);     // Single iteration, Err = -3.36e-3 * 2^(-flr(log2(x)))
+    v.f = v.f * ( 4 + w * (-6 + w * (4 - w)));  // Second iteration, Err = -1.13e-5 * 2^(-flr(log2(x)))
+    v.f = v.f * (8 + w * (-28 + w * (56 + w * (-70 + w *(56 + w * (-28 + w * (8 - w)))))));  // Third Iteration, Err = +-6.8e-8 *  2^(-flr(log2(x)))
+
+    return v.f * sx;
 }
 #endif

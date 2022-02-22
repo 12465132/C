@@ -1,6 +1,6 @@
 //#include <conio.h>
 #include <iostream>
-#include "cordnate.h"
+#include "cordnate3.h"
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -12,7 +12,7 @@ int main () {
 //inputs
   camerav cam;
   camerav camr;
-  sphere sphere[25];
+  sphere sphere[20];
   gvect g, s, sun;
 
   sun.setvect(1,-1,10);
@@ -24,7 +24,7 @@ int main () {
   sphere[1].setvect(2,-2,-4.5);
   sphere[1].setradius(7);
 int numberofspheres = sizeof(sphere)/sizeof(sphere[0]),sphereindex=-1;
-double distancefromcam = -1;
+float distancefromcam = -1;
 for (int i = 2; i < numberofspheres-2; i++){sphere[i].setvect(0,0, i+1);sphere[i].setradius(4);}
 //inputs
 
@@ -42,8 +42,8 @@ for (int i = 2; i < numberofspheres-2; i++){sphere[i].setvect(0,0, i+1);sphere[i
 
   std::cout << "\nworking\n";
   std::cout << setprecision(3);
-  for (double i = cam.py; i > -cam.py; i = i - 1){
-    for (double j = -cam.px; j < cam.px; j++){
+  for (float i = cam.py; i > -cam.py; i = i - 1){
+    for (float j = -cam.px; j < cam.px; j++){
 	  cam.ofsetto (&camr, j / cam.px, i / (cam.py*2.11764706));
     sphereindex = -1;
     distancefromcam = -1;
@@ -97,7 +97,7 @@ std::cout << "\n";
 // 118, 99, 122, 88,89, 85, 74, 67, 76, 81, 48, 79, 90, 109, 119, 113, 112, 100,
 // 98, 107, 104, 97, 111, 42, 35, 77,87, 38, 56, 37, 66, 64, 36};
 //   std::cout << "\n" << shadowascii(1.879898,10) << ascii2[1] << ascii2[3] << ascii2[59];
-// for (double i=0;i<90;i++) {
+// for (float i=0;i<90;i++) {
 // std::cout <<char(raylight(i))<<"\n";
 // }
 //$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,"^`'.

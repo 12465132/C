@@ -5,46 +5,14 @@
 using namespace std;
 
 
-//COLORREF backgroundColor = RGB(255, 255, 255);
-
 
 int main()
 {
 
-// //inputs cpp
-// int int1;
-// int int2;
-// char int3;
-// char int4;
-// std::cout << "\n" << "function:/*function of program*/"  /*function of program*/
-//  << "\n" << "Enter value: \n";
-//  std::cout <<"Entered x:";
-// std::cin >> int1;
-//  std::cout <<"Entered y:";
-// std::cin >> int2;
-//  std::cout <<"Entered n:";
-// std::cin >> int3;
-//  std::cout <<"Entered n:";
-// std::cin >> int4;
-// std::cout
-//  <<"Entered value:" << int1 << "\n"
-//  <<"Entered value:" << int2 << "\n"
-//  <<"Entered value:" << int3 << "\n""\n";
-// //inputs cpp
+
 
 //inputs
 
-    camerav cam;
-    camerav camr;
-    sphere sphere;
-    gvect g,s,sun;
-
-  sun.setvect (-10, -10, 50);
-  sun.setcord (-10, -10, 50);
-    cam.setvect(2,2,-1);
-    cam.setcord(0,0,0);
-    sphere.setvect(5,5,0);
-    sphere.setradius(3);
 
 //inputs
 
@@ -60,25 +28,15 @@ int main()
    // camr.printcord();
    // cam.printvect();
    // cam.printcord();
-   sphere.cameraintersect(&cam,&g);
-   sphere.normalofray(&g,&s);
-   g.printvect();
-   g.printcord();
-   sphere.printvect();
-   s.printvect();
-   s.printcord();
+for (int i = 0; i < 200; i++)
+{
+   for (int i = 0; i <1600; i++)
+   {
+      std::cout << "M";
+   }
+   std::cout << "\n";
+}
 
-            if(((g.z<=0))){
-               std::cout << "+1";
-            }else{
-               std::cout << "-1";
-            }
-            if(sphere.intersect(&cam)){
-               std::cout << "+12";
-            }else{
-               std::cout << "-12";
-            }
-            std::cout << (s.anglevect(&sun)/19);
 
 //  std::cout << "\nworking\n";
 //     for (double i = 20; i > -20; i=i-1)
