@@ -12,20 +12,31 @@ int main () {
 //inputs
   camerav cam;
   camerav camr;
-  sphere sphere[20];
+  sphere sphere[125];
   gvect g, s, sun;
 
   sun.setvect(1,-1,10);
-  cam.setvect(-1, -1, -1);
-  cam.setcord(50,50,50);
-  cam.camreasetpixel(900,200);
-  sphere[0].setvect(-2,2, -4);
-  sphere[0].setradius(7);
-  sphere[1].setvect(2,-2,-4.5);
-  sphere[1].setradius(7);
+  cam.setvect(-.5, -1, -1);
+  cam.setcord(5,10,10);
+  cam.camreasetpixel(450,100);
+//nutz
+//   sphere[0].setvect(-2,2, -4);
+//   sphere[0].setradius(7);
+//   sphere[1].setvect(2,-2,-4.5);
+//   sphere[1].setradius(7);
+//   for (int i = 2; i < numberofspheres-2; i++){sphere[i].setvect(0,0, i+1);sphere[i].setradius(4);}
+for (int i = 0; i < 125; i++){
+sphere[i].setvect(
+2*(round((i)%5)       ),
+2*(round(int(i*.2)%5 )),
+2*(round(int(i*.04)%5)));
+sphere[i].setradius(.5);
+}
+
 int numberofspheres = sizeof(sphere)/sizeof(sphere[0]),sphereindex=-1;
 float distancefromcam = -1;
-for (int i = 2; i < numberofspheres-2; i++){sphere[i].setvect(0,0, i+1);sphere[i].setradius(4);}
+
+string output[int(cam.px+cam.px)];
 //inputs
 
 //clock start
@@ -42,8 +53,8 @@ for (int i = 2; i < numberofspheres-2; i++){sphere[i].setvect(0,0, i+1);sphere[i
 
   std::cout << "\nworking\n";
   std::cout << setprecision(3);
-  for (float i = cam.py; i > -cam.py; i = i - 1){
-    for (float j = -cam.px; j < cam.px; j++){
+  for (int i = cam.py; i > -cam.py; i = i - 1){
+    for (int j = -cam.px; j < cam.px; j++){
 	  cam.ofsetto (&camr, j / cam.px, i / (cam.py*2.11764706));
     sphereindex = -1;
     distancefromcam = -1;
@@ -82,15 +93,22 @@ for (int i = 2; i < numberofspheres-2; i++){sphere[i].setvect(0,0, i+1);sphere[i
 	  if (sphereindex!=-1){
         sphere[sphereindex].cameraintersect(&camr, &g);
 	      sphere[sphereindex].normalofray (&g, &s);
-	       std::cout << shadowascii(((s.anglevect(&sun)/256)*90),90);
+	       output[i+int(cam.py)]=output[i+int(cam.py)]+char(shadowascii(((s.anglevect(&sun)/256)*90),90));
+          // std::cout << shadowascii(((s.anglevect(&sun)/256)*90),90);
 	    }else{
-	        std::cout << char(176);
+	        output[i+int(cam.py)]=output[i+int(cam.py)]+char(176);
+          //  std::cout << char(176);
         }
+
     }
-std::cout << "\n";
+    std::cout << "\n";
 }
-    
-    
+        std::cout <<"\nrendering complete\n";
+for (int i =  cam.py+cam.py; i >= 0; i--)
+{
+std::cout << output[i]<<"\n";
+}    
+   
 //     char ascii2[69] =
 // {46, 39, 96, 94, 34, 44, 58, 59, 73, 108, 33, 105, 62, 60, 126, 43, 95, 45, 63,
 // 93, 91, 125, 123, 49, 41, 40, 124, 92, 47, 116, 102, 106, 114, 120, 110, 117,

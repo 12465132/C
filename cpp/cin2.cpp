@@ -10,22 +10,10 @@ int main () {
 
 
 //inputs
-  camerav cam;
-  camerav camr;
-  sphere sphere[25];
-  gvect g, s, sun;
-
-  sun.setvect(1,-1,10);
-  cam.setvect(-1, -1, -1);
-  cam.setcord(50,50,50);
-  cam.camreasetpixel(900,200);
-  sphere[0].setvect(-2,2, -4);
-  sphere[0].setradius(7);
-  sphere[1].setvect(2,-2,-4.5);
-  sphere[1].setradius(7);
-int numberofspheres = sizeof(sphere)/sizeof(sphere[0]),sphereindex=-1;
-double distancefromcam = -1;
-for (int i = 2; i < numberofspheres-2; i++){sphere[i].setvect(0,0, i+1);sphere[i].setradius(4);}
+struct sphere sphere;
+struct g sun;
+initialize(sphere);
+initialize(sun);
 //inputs
 
 //clock start
@@ -40,56 +28,7 @@ for (int i = 2; i < numberofspheres-2; i++){sphere[i].setvect(0,0, i+1);sphere[i
 
 
 
-  std::cout << "\nworking\n";
-  std::cout << setprecision(3);
-  for (float i = cam.py; i > -cam.py; i = i - 1){
-    for (float j = -cam.px; j < cam.px; j++){
-	  cam.ofsetto (&camr, j / cam.px, i / (cam.py*2.11764706));
-    sphereindex = -1;
-    distancefromcam = -1;
-    for (int k = 0; k < numberofspheres; k++){
-        	  if (sphere[k].cameraintersect(&camr, &g)){
-	          sphere[k].normalofray (&g, &s);
-              if(!(distancefromcam==g.length)){
-                  if((distancefromcam!=-1)&&((distancefromcam<camr.mindist)||(distancefromcam>camr.maxdist))){
-                      distancefromcam=-1;
-                      if((g.length>camr.mindist)&&(g.length<camr.maxdist)){
-                          if (distancefromcam==-1){
-                              distancefromcam=g.length;
-                              sphereindex=k;
-                              
-                      }else{
-                          if (distancefromcam>g.length){
-                              distancefromcam=g.length;
-                              sphereindex=k;
-                              
-                          }}}
-                  }else{
-                      if((g.length>camr.mindist)&&(g.length<camr.maxdist)){
-                          if (distancefromcam==-1){
-                              distancefromcam=g.length;
-                              sphereindex=k;
-                              
-                      }else{
-                          if (distancefromcam>g.length){
-                              distancefromcam=g.length;
-                              sphereindex=k;
-                              
-              }}}}}
-	      
-	    }
-    }
-	  if (sphereindex!=-1){
-        sphere[sphereindex].cameraintersect(&camr, &g);
-	      sphere[sphereindex].normalofray (&g, &s);
-	       std::cout << shadowascii(((s.anglevect(&sun)/256)*90),90);
-	    }else{
-	        std::cout << char(176);
-        }
-    }
-std::cout << "\n";
-}
-    
+
     
 //     char ascii2[69] =
 // {46, 39, 96, 94, 34, 44, 58, 59, 73, 108, 33, 105, 62, 60, 126, 43, 95, 45, 63,
