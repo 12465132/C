@@ -193,9 +193,9 @@ float s4z = (((DT*(c->z))/(pow(N,2)))-((BS*(c->z))/N));
 ////////////////////////////////////////
 
 if(
-(samesign(s4x,c->x)) && 
-(samesign(s4y,c->y)) && 
-(samesign(s4z,c->z))){
+(std::signbit(c->x)==std::signbit(s4x)) && 
+(std::signbit(c->y)==std::signbit(s4y)) && 
+(std::signbit(c->z)==std::signbit(s4z))){
 
 t->setvect( s4x , s4y , s4z );
 t->setcord(c->cx,c->cy,c->cz);
@@ -344,13 +344,14 @@ n->setcord( x , y , z );
 
 float gvect::anglevect(gvect * s){
 
-float angle;
 float m2 = s->scalar;
 float m1 = scalar;
 float DP = dotproduct(s);
-    
-return (rad2degree(acos(DP/(m1*m2))));
-    
+float angle=DP/(m1*m2);
+if(angle>-1&&angle<1){return (rad2degree(acos(DP/(m1*m2))));}
+else if(angle<=-1){return 180;}
+else if(angle>=1){return 0;}
+else{return 0;} 
 }
 float camerav::distfromgvects(gvect * m){
 float storex = (m->x+m->cx - cx);
@@ -381,8 +382,9 @@ std::cout << " ";
     return;
 }}
 char raylight(float angle){
+int light[4]={219,222,221,63};
 if (angle<=90){
-return shadowascii(((angle/90)*256),256);  
+return char(light[int(angle/30)]);  
 }else{
 return char(32);
 }}

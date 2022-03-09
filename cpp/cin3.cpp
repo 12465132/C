@@ -15,16 +15,19 @@ int main () {
   sphere sphere[125];
   gvect g, s, sun;
 
-  sun.setvect(1,-1,10);
-  cam.setvect(-.5, -1, -1);
-  cam.setcord(5,10,10);
-  cam.camreasetpixel(450,100);
+int numberofspheres = sizeof(sphere)/sizeof(sphere[0]),sphereindex=-1;
+float distancefromcam = -1;
+
+  sun.setvect(0,0,1);
+  cam.setvect(-1, -1, -1);
+  cam.setcord(5,5,5);
+  cam.camreasetpixel(900,200);
 //nutz
-//   sphere[0].setvect(-2,2, -4);
-//   sphere[0].setradius(7);
-//   sphere[1].setvect(2,-2,-4.5);
-//   sphere[1].setradius(7);
-//   for (int i = 2; i < numberofspheres-2; i++){sphere[i].setvect(0,0, i+1);sphere[i].setradius(4);}
+sphere[0].setvect(2,-2,-4.5);
+sphere[0].setradius(7);
+  sphere[1].setvect(2,-2,-4.5);
+  sphere[1].setradius(7);
+  //for (int i = 2; i < numberofspheres-2; i++){sphere[i].setvect(0,0, i+1);sphere[i].setradius(4);}
 for (int i = 0; i < 125; i++){
 sphere[i].setvect(
 2*(round((i)%5)       ),
@@ -33,10 +36,8 @@ sphere[i].setvect(
 sphere[i].setradius(.5);
 }
 
-int numberofspheres = sizeof(sphere)/sizeof(sphere[0]),sphereindex=-1;
-float distancefromcam = -1;
 
-string output[int(cam.px+cam.px)];
+
 //inputs
 
 //clock start
@@ -60,7 +61,6 @@ string output[int(cam.px+cam.px)];
     distancefromcam = -1;
     for (int k = 0; k < numberofspheres; k++){
         	  if (sphere[k].cameraintersect(&camr, &g)){
-	          sphere[k].normalofray (&g, &s);
               if(!(distancefromcam==g.scalar)){
                   if((distancefromcam!=-1)&&((distancefromcam<camr.mindist)||(distancefromcam>camr.maxdist))){
                       distancefromcam=-1;
@@ -92,12 +92,11 @@ string output[int(cam.px+cam.px)];
     }
 	  if (sphereindex!=-1){
         sphere[sphereindex].cameraintersect(&camr, &g);
-	      sphere[sphereindex].normalofray (&g, &s);
-	       output[i+int(cam.py)]=output[i+int(cam.py)]+char(shadowascii(((s.anglevect(&sun)/256)*90),90));
-          // std::cout << shadowascii(((s.anglevect(&sun)/256)*90),90);
+	       output[i+int(cam.py)]=output[i+int(cam.py)]+raylight(s.anglevect(&sun));
+          std::cout << "|" ;
 	    }else{
 	        output[i+int(cam.py)]=output[i+int(cam.py)]+char(176);
-          //  std::cout << char(176);
+          std::cout << "|" ;
         }
 
     }

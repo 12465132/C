@@ -10,12 +10,20 @@ int main () {
 
 
 //inputs
-struct sphere sphere;
+struct sphere sphere[125];
 struct g sun;
+
 initialize(sphere);
 initialize(sun);
+Global.sky = RGBT(50,60,250)
 //inputs
-
+for (int i = 0; i < 125; i++){
+set(sphere[i].c,
+2*(round((i)%5)       ),
+2*(round(int(i*.2)%5 )),
+2*(round(int(i*.04)%5)));
+sphere[i].setradius(.5);
+}
 //clock start
 //#include <bits/stdc++.h>
   clock_t start, end;

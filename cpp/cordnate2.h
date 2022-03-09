@@ -22,60 +22,86 @@ void update(struct c l);
 void update(struct v l);
 void update(struct g l);
 void update(struct sphere l);
+void normalize(struct c l);
+void normalize(struct v l);
+void normalize(struct g l);
 void set(struct v l,float x,float y,float z);
 void set(struct c l,float x,float y,float z);
 void set(struct g l,int a,float x,float y,float z);
 void set(struct sphere l,int r=1);
 void setpixel(struct cam l,int spx,int spy);
 float dot(struct camera c,struct sphere s);
-struct c{float x,y,z,scalar,length;};
+
 struct v{float x,y,z,scalar,length;};
-struct g{struct v v;struct c c;};
+struct g{struct v v;struct v c;};
+struct RGB{int R,G,B;};
 struct camera {
 struct v v;
-struct c c;
+struct v c;
+struct RGB RGB;
     int px=80,py=60;
     float fovx,fovy;
     float mindist=1,maxdist=10000;
     float distancefromcam = -1;
     int sphereindex=-1;
-    char buffer[px+px][py+px];
 }cam;
+struct cameraray {
+struct v v;
+struct v c;
+struct RGB RGB;
+    int px=80,py=60;
+    float fovx,fovy;
+    float mindist=1,maxdist=10000;
+    float distancefromcam = -1;
+    int sphereindex=-1;
+}camr;
 struct sphere{
+struct RGB RGB;
 float r;
+bool reflect;
 struct v c;
 };
+struct global {
+int bouncestep=2;
+struct RGB sky;
+struct RGB floor;
+struct v sun;
+}Global;
 
 
 
 
 
-void update(struct c l){
-l.scalar = fast_inv_sqrt((pow(l.x,2))+pow(l.y,2)+pow(l.z,2));
-l.length = sqrt((pow(l.x,2))+pow(l.y,2)+pow(l.z,2));}
 void update(struct v l){
 l.scalar = fast_inv_sqrt((pow(l.x,2))+pow(l.y,2)+pow(l.z,2));
 l.length = sqrt((pow(l.x,2))+pow(l.y,2)+pow(l.z,2));}
 void update(struct g l){update(l.v);update(l.c);}
 void update(struct sphere l){update(l.c);}
 
-void initialize(struct c l){
-l.x=0;l.y=0;l.z=0;
-l.scalar=0;
-l.length=0;}
+void initialize(struct RGB l){ l.R=0; l.G=0; l.B=0; }
 void initialize(struct v l){
 l.x=0;l.y=0;l.z=0;
 l.scalar=0;
 l.length=0;}
 void initialize(struct g l){initialize(l.v);initialize(l.c);}
-void initialize(struct sphere l){initialize(l.c);l.r=0;}
+void initialize(struct sphere l){initialize(l.c);initialize(l.RGB);l.r=0;l.reflect=0;}
+
+void normalize(struct v l){
+l.scalar = fast_inv_sqrt((pow(l.x,2))+pow(l.y,2)+pow(l.z,2));
+l.length = sqrt((pow(l.x,2))+pow(l.y,2)+pow(l.z,2));
+l.x = l.x*l.scalar; l.y = l.y*l.scalar; l.z = l.z*l.scalar; }
+// void normalize(struct v l){
+// l.scalar = fast_inv_sqrt((pow(l.x,2))+pow(l.y,2)+pow(l.z,2));
+// l.length = sqrt((pow(l.x,2))+pow(l.y,2)+pow(l.z,2));
+// l.x = l.x*l.scalar; l.y = l.y*l.scalar; l.z = l.z*l.scalar; }
+void normalize(struct g l){normalize(l.v);}
 
 void set(struct g l,int a,float x,float y,float z){
-if(a==1){set(l.v,x,y,z);}else if(a==-1)
-{set(l.c,x,y,z);}else{return;}} //a=1=vector,a=-1=cord
-void set(struct v l,float x,float y,float z){l.x=x;l.y=y;l.z=z;}
-void set(struct c l,float x,float y,float z){l.x=x;l.y=y;l.z=z;}
+if(a==1){set(l.v,x,y,z);}else if(a==0)
+{set(l.c,x,y,z);}else{return;}update(l);} //a=1=vector,a=0=cord
+void set(struct v l,float x,float y,float z){l.x=x;l.y=y;l.z=z;update(l);}
 void set(struct sphere l,float r){l.r=r;}
+void setColor(struct sphere l,int r,int g,int b){l.RGB.R=r;l.RGB.G=g;l.RGB.B=b;};
 void setpixel(struct camera l,int spx,int spy){l.px=spx,l.py=spy;}
 void set(struct camera l,int spx,int  spy,float sfovx,float  sfovy,float  smindist, float smaxdist){
   l.px=spx,l.py=spy;
@@ -83,51 +109,55 @@ void set(struct camera l,int spx,int  spy,float sfovx,float  sfovy,float  smindi
   l.mindist=smindist,l.maxdist=smaxdist;  
 }
 
+RGB RGBT(int R,int G,int B){struct RGB l;l.R=R;l.G,l.B=G;return l;}
+RGB RGBaverage(struct RGB C1,struct RGB C2){struct RGB l; l.R=((C1.R+C2.R)*.5); l.G=((C1.G+C2.G)*.5); l.B=((C1.B+C2.B)*.5);
+   return l;}
 float dot(struct v i,struct v o)
-{return ((i.x*o.x)+(i.y*o.y)+(i.z*o.z));}
-float dot(struct v i,struct c o)
-{return ((i.x*o.x)+(i.y*o.y)+(i.z*o.z));}
-float dot(struct c i,struct c o)
 {return ((i.x*o.x)+(i.y*o.y)+(i.z*o.z));}
 float dot(struct camera c,struct sphere s)
 {return (((s.c.x-c.c.x)*c.v.x) + ((s.c.y-c.c.y)*c.v.y) + ((s.c.z-c.c.z)*c.v.z));}
 
-bool intersectspheref(struct camera c,struct sphere s){
+void offset(struct camera c,struct cameraray cr,float xs,float ys){
+float v  = fast_inv_sqrt((c.v.x*c.v.x) + (c.v.y*c.v.y));
+float v2 = fast_inv_sqrt((c.v.x*c.v.x) + (c.v.y*c.v.y) + (c.v.z*c.v.z));
+    cr.v.x  = c.v.x + (0-(y*xs)-(x*z*ys*v2))*v;
+    cr.v.y  = c.v.y + (0+(x*xs)-(y*z*ys*v2))*v;
+    cr.v.z  = c.v.z + (inv_fast(v) * ys * v2);
+    cr.c.x = c.c.x;
+    cr.c.y = c.c.y;
+    cr.c.z = c.c.z;
+}
+//void offset(camera,float xs,float ys){}
+bool Qintersectsphere(struct camera c,struct sphere s){
 float DT = dot(c,s);
 float final =sqrt(
-    pow(((s.c.x-c.c.x) - ((DT*(c.v.x))*(pow(c.v.scalar,2)))),2) + 
-    pow(((s.c.y-c.c.y) - ((DT*(c.v.y))*(pow(c.v.scalar,2)))),2) + 
-    pow(((s.c.z-c.c.z) - ((DT*(c.v.z))*(pow(c.v.scalar,2)))),2));
+    pow((s.c.x-c.c.x) - (DT*c.v.x*c.v.scalar*c.v.scalar),2) + 
+    pow((s.c.y-c.c.y) - (DT*c.v.y*c.v.scalar*c.v.scalar),2) + 
+    pow((s.c.z-c.c.z) - (DT*c.v.z*c.v.scalar*c.v.scalar),2));
 
 if (final<s.r){return true;}else{return false;}
 }
 bool intersectsphere(struct camera c,struct sphere s,struct g g){
 float N = c.v.scalar;
 float DT = dot(c,s);
+float store =
+  ((s.c.x-c.c.x) - ((DT*c.v.x*N*N))*((s.c.x-c.c.x) - (DT*c.v.x*N*N))) + 
+  ((s.c.y-c.c.y) - ((DT*c.v.y*N*N))*((s.c.y-c.c.y) - (DT*c.v.y*N*N))) + 
+  ((s.c.z-c.c.z) - ((DT*c.v.z*N*N))*((s.c.z-c.c.z) - (DT*c.v.z*N*N))) ;
+float final = sqrt(store);
+float BS = sqrt((s.r*s.r) - abs(store));
   
-float final = sqrt(
-  pow(((s.c.x-c.c.x) - ((DT*(c.v.x))*(pow(N,2)))),2) + 
-  pow(((s.c.y-c.c.y) - ((DT*(c.v.y))*(pow(N,2)))),2) + 
-  pow(((s.c.z-c.c.z) - ((DT*(c.v.z))*(pow(N,2)))),2));
-  
-float BS = sqrt( pow(s.r,2) - abs(  
-  pow(((s.c.x-c.c.x) - ((DT*(c.v.x))*(pow(N,2)))),2) + 
-  pow(((s.c.y-c.c.y) - ((DT*(c.v.y))*(pow(N,2)))),2) + 
-  pow(((s.c.z-c.c.z) - ((DT*(c.v.z))*(pow(N,2)))),2)));
-  
-float s4x = (((DT*(c.v.x))*(pow(N,2)))-((BS*(c.v.x))*N));
-float s4y = (((DT*(c.v.y))*(pow(N,2)))-((BS*(c.v.y))*N));
-float s4z = (((DT*(c.v.z))*(pow(N,2)))-((BS*(c.v.z))*N));
+float s4x = ((DT*c.v.x*N*N)-(BS*c.v.x*N));
+float s4y = ((DT*c.v.y*N*N)-(BS*c.v.y*N));
+float s4z = ((DT*c.v.z*N*N)-(BS*c.v.z*N));
 
 if(
-(samesign(s4x,c.v.x)) && 
-(samesign(s4y,c.v.y)) && 
-(samesign(s4z,c.v.z))){
+(std::signbit(c.v.x)==std::signbit(s4x)) && 
+(std::signbit(c.v.y)==std::signbit(s4y)) && 
+(std::signbit(c.v.z)==std::signbit(s4z))){
 
-  
-set(g,-1,c.c.x,c.c.y,c.c.z);
-set(g,1, s4x , s4y , s4z );
-update(g);
+set(g.c,c.c.x,c.c.y,c.c.z);
+set(g.v, s4x , s4y , s4z );
 if (final<s.r){
     return true;
 }else{
@@ -136,9 +166,119 @@ if (final<s.r){
 }else{
 set(g.v, NAN, NAN, NAN);
 set(g.c, NAN, NAN, NAN);
-update(g);
 return false;
 }
+}
+bool intersectsphere(struct cameraray c,struct sphere s,struct g g){
+float N = c.v.scalar;
+float DT = dot(c.v,s.c);
+  
+float store =
+  ((s.c.x-c.c.x) - ((DT*c.v.x*N*N))*((s.c.x-c.c.x) - (DT*c.v.x*N*N))) + 
+  ((s.c.y-c.c.y) - ((DT*c.v.y*N*N))*((s.c.y-c.c.y) - (DT*c.v.y*N*N))) + 
+  ((s.c.z-c.c.z) - ((DT*c.v.z*N*N))*((s.c.z-c.c.z) - (DT*c.v.z*N*N))) ;
+float final = sqrt(store);
+float BS = sqrt((s.r*s.r) - abs(store));
+  
+float s4x = ((DT*c.v.x*N*N)-(BS*c.v.x*N));
+float s4y = ((DT*c.v.y*N*N)-(BS*c.v.y*N));
+float s4z = ((DT*c.v.z*N*N)-(BS*c.v.z*N));
+
+if(
+(std::signbit(c.v.x)==std::signbit(s4x)) && 
+(std::signbit(c.v.y)==std::signbit(s4y)) && 
+(std::signbit(c.v.z)==std::signbit(s4z))){
+
+set(g.c,c.c.x,c.c.y,c.c.z);
+set(g.v, s4x , s4y , s4z );
+if (final<s.r){
+    return true;
+}else{
+    return false;
+}
+}else{
+set(g.v, NAN, NAN, NAN);
+set(g.c, NAN, NAN, NAN);
+return false;
+}
+}
+struct RGB trace(struct cameraray c,struct sphere s[],struct global p){
+int numberofspheres = sizeof(sphere)/sizeof(sphere[0]),sphereindex=-1, bounce=0;
+float distancefromcam = -1,N,dtn,store;
+float s4x,s5x,s6cx,s6vx,DT;
+float s4y,s5y,s6cy,s6vy,final;
+float s4z,s5z,s6cz,s6vz,BS;
+struct g g,g2,g3;
+struct cameraray camr;
+initialize(g);
+for (int i = 0; i < numberofspheres; i++){
+ N = c.v.scalar;
+ DT = dot(c.v,s[i].c);
+  store =
+  ((s[i].c.x-c.c.x) - ((DT*c.v.x*N*N))*((s[i].c.x-c.c.x) - (DT*c.v.x*N*N))) + 
+  ((s[i].c.y-c.c.y) - ((DT*c.v.y*N*N))*((s[i].c.y-c.c.y) - (DT*c.v.y*N*N))) + 
+  ((s[i].c.z-c.c.z) - ((DT*c.v.z*N*N))*((s[i].c.z-c.c.z) - (DT*c.v.z*N*N))) ;
+ final = sqrt(store);
+ s4x = (DT*c.v.x*N*N);
+ s4y = (DT*c.v.y*N*N);
+ s4z = (DT*c.v.z*N*N);
+
+if (
+(std::signbit(c.v.x)==std::signbit(s4x)) &&
+(std::signbit(c.v.y)==std::signbit(s4y)) &&
+(std::signbit(c.v.z)==std::signbit(s4z)) &&
+(final<s[i].r)){
+
+BS = sqrt((s[i].r*s[i].r) - abs(store));
+s5x = (s4x-(BS*c.v.x*N));
+s5y = (s4y-(BS*c.v.y*N));
+s5z = (s4z-(BS*c.v.z*N));
+set(g,-1,s5x,s5y,s5z);
+    if(!(distancefromcam==g.v.length)){
+        if((distancefromcam!=-1)&&((distancefromcam<c.mindist)||(distancefromcam>c.maxdist))){
+            distancefromcam=-1;
+            if((g.v.length>c.mindist)&&(g.v.length<c.maxdist)){
+                if (distancefromcam==-1){
+                    distancefromcam=g.v.length;
+                    sphereindex=i;
+
+            }else{
+                if (distancefromcam>g.v.length){
+                    distancefromcam=g.v.length;
+                    sphereindex=i;
+
+                }}}
+        }else{
+            if((g.v.length>c.mindist)&&(g.v.length<c.maxdist)){
+                if (distancefromcam==-1){
+                    distancefromcam=g.v.length;
+                    sphereindex=i;
+
+            }else{
+                if (distancefromcam>g.v.length){
+                    distancefromcam=g.v.length;
+                    sphereindex=i;
+
+    }}}}}}}
+if (sphereindex!=-1){
+if ((s[sphereindex].reflect==1) && (p.bouncestep>0)){
+    intersectsphere(c,s[sphereindex],g);
+    set(g2.v ,g.c.x+g.v.x-s[sphereindex].c.x ,g.c.y+g.v.y-s[sphereindex].c.y ,g.c.z+g.v.z-s[sphereindex].c.z );
+    normalize(g2.v);
+    dtn = 2*dot(g.v,g2.v);
+    //initialize(camr);
+    set(camr.v, g.v.x-(g2.v.x*dtn), g.v.-(g2.v.y*dtn), g.v.z-(g2.v.z*dtn));
+    set(camr.c, g.v.x+s[sphereindex].c.x, g.v.y+s[sphereindex].c.y, g.v.z+s[sphereindex].c.z);
+    p.bouncestep = p.bouncestep-1
+  return RGBaverage(s[sphereindex].RGB,trace(camr,s,p));
+ }else{
+  return s[sphereindex].RGB;
+ } 
+	    }else{
+//////////////////////////////////// work needed
+        return p.sky;
+//////////////////////////////////// work needed
+        }
 }
 
 char shadowascii(float l,float rfz){
