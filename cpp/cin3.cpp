@@ -92,6 +92,7 @@ sphere[i].setradius(.5);
     }
 	  if (sphereindex!=-1){
         sphere[sphereindex].cameraintersect(&camr, &g);
+        sphere[sphereindex].normalofray (&g, &s);
 	       output[i+int(cam.py)]=output[i+int(cam.py)]+raylight(s.anglevect(&sun));
           std::cout << "|" ;
 	    }else{

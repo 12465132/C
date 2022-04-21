@@ -1,26 +1,18 @@
+
+// CPP program to print Fizz Buzz
 #include <iostream>
-#include <string>
-#include "cordnate3.h"
 #include <bits/stdc++.h>
 using namespace std;
-
-
-int main () {
-int count=10,count2=100;
-string output[count];
-
-
-for (int i = 0; i < count; i++)
+ struct test {
+     float x,y,z;
+ };
+int main(void)
 {
-for (int j = 0; j < count2; j++)
-{
-   output[i]=output[i]+char(j); 
-}}
-for (int i = 0; i < count; i++)
-{
-std::cout << output[i]<<"\n";
-}
-
-
+struct test v1,v;
+v1.x=189;
+v1.y=237;
+v1.z=456;
+v=v1;
+std::cout <<v.x<<"\n"<<v.y<<"\n"<<v.z<<"\n";
 return 0;
 }

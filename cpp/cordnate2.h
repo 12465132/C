@@ -99,9 +99,9 @@ void normalize(struct g l){normalize(l.v);}
 void set(struct g l,int a,float x,float y,float z){
 if(a==1){set(l.v,x,y,z);}else if(a==0)
 {set(l.c,x,y,z);}else{return;}update(l);} //a=1=vector,a=0=cord
-void set(struct v l,float x,float y,float z){l.x=x;l.y=y;l.z=z;update(l);}
+void set(struct v * l,float x,float y,float z){l.x=x;l.y=y;l.z=z;update(l);}
 void set(struct sphere l,float r){l.r=r;}
-void setColor(struct sphere l,int r,int g,int b){l.RGB.R=r;l.RGB.G=g;l.RGB.B=b;};
+void setColor(struct RGB l,int r,int g,int b){l.R=r;l.G=g;l.B=b;};
 void setpixel(struct camera l,int spx,int spy){l.px=spx,l.py=spy;}
 void set(struct camera l,int spx,int  spy,float sfovx,float  sfovy,float  smindist, float smaxdist){
   l.px=spx,l.py=spy;
@@ -120,8 +120,8 @@ float dot(struct camera c,struct sphere s)
 void offset(struct camera c,struct cameraray cr,float xs,float ys){
 float v  = fast_inv_sqrt((c.v.x*c.v.x) + (c.v.y*c.v.y));
 float v2 = fast_inv_sqrt((c.v.x*c.v.x) + (c.v.y*c.v.y) + (c.v.z*c.v.z));
-    cr.v.x  = c.v.x + (0-(y*xs)-(x*z*ys*v2))*v;
-    cr.v.y  = c.v.y + (0+(x*xs)-(y*z*ys*v2))*v;
+    cr.v.x  = c.v.x + (0-(c.v.y*xs)-(c.v.x*c.v.z*ys*v2))*v;
+    cr.v.y  = c.v.y + (0+(c.v.x*xs)-(c.v.y*c.v.z*ys*v2))*v;
     cr.v.z  = c.v.z + (inv_fast(v) * ys * v2);
     cr.c.x = c.c.x;
     cr.c.y = c.c.y;
@@ -267,9 +267,9 @@ if ((s[sphereindex].reflect==1) && (p.bouncestep>0)){
     normalize(g2.v);
     dtn = 2*dot(g.v,g2.v);
     //initialize(camr);
-    set(camr.v, g.v.x-(g2.v.x*dtn), g.v.-(g2.v.y*dtn), g.v.z-(g2.v.z*dtn));
+    set(camr.v, g.v.x-(g2.v.x*dtn), g.v.y-(g2.v.y*dtn), g.v.z-(g2.v.z*dtn));
     set(camr.c, g.v.x+s[sphereindex].c.x, g.v.y+s[sphereindex].c.y, g.v.z+s[sphereindex].c.z);
-    p.bouncestep = p.bouncestep-1
+    p.bouncestep = p.bouncestep-1;
   return RGBaverage(s[sphereindex].RGB,trace(camr,s,p));
  }else{
   return s[sphereindex].RGB;
@@ -353,7 +353,6 @@ float fast_inv_sqrt(float x)
 {
     float y = x; // y holds the current guess for 1/sqrt(x)
     uint32_t *i = reinterpret_cast<uint32_t *>(&y); // i points to current guess y
-
     const uint32_t exp_mask = 0x7F800000; // 0xFF<<23
     const uint32_t magic_number = 0x5f000000; // 190<<23
 
