@@ -139,7 +139,7 @@ x=int(stepcount);
 fragColor = vec4(0,0,0,1);
         break;
     }
-}else if(distOut>500.f){
+}else if(length(C.C)>1000.f){
 fragColor = vec4(0,0,0,1.0);
 x=int(stepcount);}
 } 
