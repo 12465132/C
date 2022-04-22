@@ -3,9 +3,7 @@ const int
 OBJSize = 3,
 SphereSize = SphereSquare*SphereSquare,
 PlaneSize  = 2;
-const float distOutFCCAM =10.f;
-//const float heightCAM =iMouse.y/100.f;
-//const float anglecamradian=iMouse.x/100.f;
+const float distOutFCCAM =20.f;
 const int SetStepCount = 25,stepcount = 50;
 
 struct Camera{vec3 V,C;}C;
@@ -27,20 +25,29 @@ sqrt(p.x*p.x+p.y*p.y+p.z*p.z);}
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     // Normalized pixel coordinates (from 0 to 1)
-P[0].V = vec3(0,1,-.5);
-P[0].S = vec3(.5);
-P[1].V = vec3(1,0,-.5);
-P[1].S = vec3(.5);
-float heightCAM =(iMouse.y-(iResolution.y/2.0))/2.0;
-float anglecamradian=iTime;
-C.C = vec3(sin(anglecamradian)*distOutFCCAM,cos(anglecamradian)*distOutFCCAM, heightCAM);
-C.V = vec3(-sin(anglecamradian)*distOutFCCAM,-cos(anglecamradian)*distOutFCCAM, -heightCAM);
+P[0].V = vec3(-1.,0,-1);
+P[0].S = vec3(.8);
+P[1].V = vec3(0,-2.,-.5);
+P[1].S = vec3(.3);
+float heightCAM =(iMouse.y-(iResolution.y/2.0))/300.;
+float anglecamradian=-(iMouse.x-(iResolution.x/2.0))/100.;
+C.C = vec3(
+sin(heightCAM)*cos(-anglecamradian)*distOutFCCAM,
+sin(heightCAM)*sin(-anglecamradian)*distOutFCCAM,
+cos(heightCAM)*distOutFCCAM);
+
+C.V = vec3(
+-sin(heightCAM)*cos(-anglecamradian),
+-sin(heightCAM)*sin(-anglecamradian),
+-cos(heightCAM));
 
 vec2 uv = fragCoord/iResolution.xy-.5;
 uv.y *= float(iResolution.y/iResolution.x);
-float CvXYI  = inversesqrt(C.V.x*C.V.x+C.V.y*C.V.y);
 C.V = normalize(C.V);
 C.V = camoffset(C.V,uv);
+C.V = normalize(C.V); 
+
+
 for(int x=0;x<SphereSize;x++){
 S[x].C = vec3( 
 (modf(floor(float(x)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5), 
@@ -52,7 +59,7 @@ S[x].S = vec3(
 ((S[x].C.y+float(SphereSquare)*.5)/float(SphereSquare)),
 ((S[x].C.z+float(SphereSquare)*.5)/float(SphereSquare)));
 }
-C.V = normalize(C.V); 
+
 float distOut   = 10000.,
 StoreDist = distOut,
 OBJDist[OBJSize];
@@ -60,6 +67,8 @@ int
 OBJIndex[OBJSize],
 typeindex = -1,
 index = -1;
+
+
 for(int i=1;i<OBJSize;i++) OBJDist[i]=distOut,OBJIndex[i]=-1;
 
 
