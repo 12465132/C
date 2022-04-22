@@ -1,8 +1,9 @@
 const int SphereSquare = 5;
 const int 
-OBJSize = 3,
+OBJTypeSize = 4,
 SphereSize = SphereSquare*SphereSquare,
-PlaneSize  = 2;
+PlaneSize  = 1,
+BoxSize = 1;
 const float distOutFCCAM =20.f;
 const int SetStepCount = 25,stepcount = 1000;
 
@@ -13,20 +14,31 @@ vec3 C,S;
 float R;
 bvec3 Q;
 }S[SphereSize];
+struct Box{
+vec3 C,LWH,S;
+float R;
+}B[BoxSize];
 float modf (float x,float y) {return(x - y * floor(x/y));}
 float dots(vec3 l,vec3 l1){return (l1.x*l.x+l1.y*l.y+l1.z*l.z)/(abs(l1.x*l1.x+l1.y*l1.y+l1.z*l1.z));}
 vec3 camoffset (vec3 v,vec2 o){return vec3(((v.x)-(v.y*o.x)-(o.y*v.z*v.x)),((v.y)+(v.x*o.x)-(o.y*v.z*v.y)),((v.z)+(o.y*v.x*v.x)+(o.y*v.y*v.y)));}
 float SDFPlane (vec3 p,vec3 c) {return abs(dots(c,p))/length(p);}
 float SDFSphere (vec3 S,float R, vec3 C) {return length(S-C)-R;}
-
+float SDFBox(vec3 c,vec3 lwh,float r,vec3 C){vec3 q = abs(C+c) - lwh;
+return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0)-r;}
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     // Normalized pixel coordinates (from 0 to 1)
-P[0].V = vec3(-1.,0,-1.);
+P[0].V = vec3(0,0,1.);
 P[0].S = vec3(.8);
-P[1].V = vec3(0,-1.,-1.);
-P[1].S = vec3(.3);
+//P[1].V = vec3(0,0,1.);
+//P[1].S = vec3(.3);
+B[0].C = vec3(2,4,-1);
+B[0].LWH = vec3(3,2,1);
+B[0].S = vec3(.2,.8,.8);
+B[0].R = 2.;
+
+
 float heightCAM =(iMouse.y-(iResolution.y))/300.;
 float anglecamradian=-(iMouse.x-(iResolution.x))/100.;
 C.C = vec3(
@@ -61,14 +73,14 @@ S[x].S = vec3(
 
 float distOut   = 10000.,
 StoreDist = distOut,
-OBJDist[OBJSize];
+OBJDist[OBJTypeSize];
 int 
-OBJIndex[OBJSize],
+OBJIndex[OBJTypeSize],
 typeindex = -1,
 index = -1;
 
 
-for(int i=1;i<OBJSize;i++) OBJDist[i]=distOut,OBJIndex[i]=-1;
+for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=distOut,OBJIndex[i]=-1;
 
 
 for(int x=0;x<int(stepcount);x++){//
@@ -85,7 +97,13 @@ OBJDist[2]=SDFPlane(P[i].V,C.C),OBJIndex[2]=i;
 }//else if (distOut<.1) i=SphereSize;
 }
 
-for(int i=1;i<OBJSize;i++){
+for(int i=0;i<PlaneSize;i++){//itrates through spheres
+if(OBJDist[3]>SDFBox(B[i].C,B[i].LWH,B[i].R,C.C)){
+OBJDist[3]=SDFBox(B[i].C,B[i].LWH,B[i].R,C.C),OBJIndex[3]=i;
+}//else if (distOut<.1) i=SphereSize;
+}
+
+for(int i=1;i<OBJTypeSize;i++){
 if(StoreDist>OBJDist[i]){
 StoreDist=OBJDist[i];
 typeindex=i;
@@ -111,7 +129,11 @@ float(1.0-float(x/stepcount))*(P[index].S.b),0);
 x=int(stepcount);
         break;
     case 3:
-        
+fragColor = vec4(
+float(1.0-float(x/stepcount))*(B[index].S.r),
+float(1.0-float(x/stepcount))*(B[index].S.g),
+float(1.0-float(x/stepcount))*(B[index].S.b),0);
+x=int(stepcount);
         break;
     default:
 fragColor = vec4(0,0,0,1);
