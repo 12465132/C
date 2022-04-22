@@ -38,7 +38,7 @@ P[0].S = vec3(.8);
 B[0].C = vec3(-2,-4,-1);
 B[0].LWH = vec3(3,2,2);
 B[0].S = vec3(.2,.8,.8);
-B[0].R = 1.5;
+B[0].R = 0.5;
 
 
 float heightCAM =(iMouse.y-(iResolution.y))/300.;
