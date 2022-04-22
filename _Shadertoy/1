@@ -25,7 +25,19 @@ float SDFPlane (vec3 p,vec3 c) {return abs(dots(c,p))/length(p);}
 float SDFSphere (vec3 S,float R, vec3 C) {return length(S-C)-R;}
 float SDFBox(vec3 c,vec3 lwh,float r,vec3 C){vec3 q = abs(C+c)+ r - lwh;
 return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0)-r;}
+vec4 RayCalculate
+(
+    Camera C,
+    Sphere S[PlaneSize],
+    Box[BoxSize],
+    Plane[PlaneSize],
+    out float StoreDistReturn,
+    out int OBJIndex,
+    out int typeindex
+){
 
+return vec4(0);
+}
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
 
@@ -36,9 +48,9 @@ P[0].S = vec3(.8);
 //P[1].V = vec3(0,0,1.);
 //P[1].S = vec3(.3);
 B[0].C = vec3(-2,-4,-1);
-B[0].LWH = vec3(3,2,2);
+B[0].LWH = vec3(5,5,5);
 B[0].S = vec3(.2,.8,.8);
-B[0].R = 0.5;
+B[0].R = 10.;
 
 
 float heightCAM =(iMouse.y-(iResolution.y))/300.;
@@ -141,7 +153,7 @@ x=int(stepcount);
 fragColor = vec4(0,0,0,1);
         break;
     }
-}else if(length(C.C)>1000.f){
+}else if(length(C.C)>40.f){
 fragColorStore = vec4(0,0,0,1.0);
 x=int(stepcount);}
 }
