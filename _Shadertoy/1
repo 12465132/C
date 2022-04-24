@@ -1,12 +1,16 @@
-const int SphereSquare = 5;
+const int SphereSquare =5;
 const int 
 OBJTypeSize = 4,
 SphereSize = SphereSquare*SphereSquare,
 PlaneSize  = 1,
 BoxSize = 1;
-const float distOutFCCAM =20.f;
-const int SetStepCount = 25,stepcount = 1000;
-
+const float distOutFCCAM =20.f,
+GlowValue = 100.;
+const int shadowstepcount = 25,stepcount = 1000;
+const bool
+GlowSetting   = false,
+ColorSetting  = true,
+ShadowSetting = true;
 struct Camera{vec3 V,C;}C;
 struct Plane{vec3 V,S;}P[PlaneSize];
 struct Sphere{
@@ -18,43 +22,36 @@ struct Box{
 vec3 C,LWH,S;
 float R;
 }B[BoxSize];
+struct Light{vec3 C,S;}L;
 float modf (float x,float y) {return(x - y * floor(x/y));}
 float dots(vec3 l,vec3 l1){return (l1.x*l.x+l1.y*l.y+l1.z*l.z)/(abs(l1.x*l1.x+l1.y*l1.y+l1.z*l1.z));}
+
 vec3 camoffset (vec3 v,vec2 o){return vec3(((v.x)-(v.y*o.x)-(o.y*v.z*v.x)),((v.y)+(v.x*o.x)-(o.y*v.z*v.y)),((v.z)+(o.y*v.x*v.x)+(o.y*v.y*v.y)));}
 float SDFPlane (vec3 p,vec3 c) {return abs(dots(c,p))/length(p);}
 float SDFSphere (vec3 S,float R, vec3 C) {return length(S-C)-R;}
 float SDFBox(vec3 c,vec3 lwh,float r,vec3 C){vec3 q = abs(C+c)+ r - lwh;
 return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0)-r;}
-vec4 RayCalculate
-(
-    Camera C,
-    Sphere S[PlaneSize],
-    Box[BoxSize],
-    Plane[PlaneSize],
-    out float StoreDistReturn,
-    out int OBJIndex,
-    out int typeindex
-){
 
-return vec4(0);
-}
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
 
-vec4 fragColorStore = vec4(0.,0.,0.,1.);
-    // Normalized pixel coordinates (from 0 to 1)
+vec3 fragColorStore = vec3(0.,0.,0.),
+CStore = vec3(0);
+	// Normalized pixel coordinates (from 0 to 1)
+L.C = vec3(-6,-6,-10);
+L.S = vec3(1);
 P[0].V = vec3(0,0,1.);
 P[0].S = vec3(.8);
 //P[1].V = vec3(0,0,1.);
 //P[1].S = vec3(.3);
-B[0].C = vec3(-2,-4,-1);
-B[0].LWH = vec3(5,5,5);
-B[0].S = vec3(.2,.8,.8);
-B[0].R = 10.;
+B[0].C = vec3(-2,-4,5);
+B[0].LWH = vec3(4,4,3);
+B[0].S = vec3(.8,.6,.2);
+B[0].R = 1.5;
 
 
-float heightCAM =(iMouse.y-(iResolution.y))/300.;
-float anglecamradian=-(iMouse.x-(iResolution.x))/100.;
+float heightCAM =(iMouse.y-(iResolution.y))/200.;
+float anglecamradian=-(iMouse.x-(iResolution.x))/40.;
 C.C = vec3(
 sin(heightCAM)*cos(-anglecamradian)*distOutFCCAM,
 sin(heightCAM)*sin(-anglecamradian)*distOutFCCAM,
@@ -69,7 +66,7 @@ vec2 uv = fragCoord/iResolution.xy-.5;
 uv.y *= float(iResolution.y/iResolution.x);
 
 C.V = normalize(C.V);
-C.V = camoffset(C.V,uv);
+C.V = camoffset(C.V,vec2(uv.x,-uv.y));
 C.V = normalize(C.V); 
 
 
@@ -77,7 +74,7 @@ for(int x=0;x<SphereSize;x++){
 S[x].C = vec3( 
 (modf(floor(float(x)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5), 
 (modf(floor(float(x)/float(SphereSquare)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5),
-(0));
+(-5));
 S[x].R =.5f;
 S[x].S = vec3(
 ((S[x].C.x+float(SphereSquare)*.5)/float(SphereSquare)),
@@ -87,7 +84,9 @@ S[x].S = vec3(
 
 float distOut   = 10000.,
 StoreDist = distOut,
-OBJDist[OBJTypeSize];
+MinStoreDist = distOut,
+OBJDist[OBJTypeSize],
+GlowMultValue;
 int 
 OBJIndex[OBJTypeSize],
 typeindex = -1,
@@ -95,7 +94,6 @@ index = -1;
 
 
 for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=distOut,OBJIndex[i]=-1;
-
 
 for(int x=0;x<int(stepcount);x++){//
 
@@ -123,40 +121,91 @@ StoreDist=OBJDist[i];
 typeindex=i;
 index = OBJIndex[i];
 }}
+
 distOut = StoreDist;
-C.C+=(C.V*distOut);
+
 
 if (distOut<.1){
-    switch (typeindex) {
-    case 1:
-fragColorStore = vec4(
-float(1.0-float(x/stepcount))*(S[index].S.r),
-float(1.0-float(x/stepcount))*(S[index].S.g),
-float(1.0-float(x/stepcount))*(S[index].S.b),0);
-x=int(stepcount);
-        break;
-    case 2:
-fragColorStore = vec4(
-float(1.0-float(x/stepcount))*(P[index].S.r),
-float(1.0-float(x/stepcount))*(P[index].S.g),
-float(1.0-float(x/stepcount))*(P[index].S.b),0);
-x=int(stepcount);
-        break;
-    case 3:
-fragColorStore = vec4(
-float(1.0-float(x/stepcount))*(B[index].S.r),
-float(1.0-float(x/stepcount))*(B[index].S.g),
-float(1.0-float(x/stepcount))*(B[index].S.b),0);
-x=int(stepcount);
-        break;
-    default:
-fragColor = vec4(0,0,0,1);
-        break;
-    }
+GlowMultValue = (float(x*int(GlowSetting))/GlowValue);
+	switch (typeindex) {
+	case 1:
+fragColorStore = GlowMultValue+vec3(
+(S[index].S.r*float(ColorSetting)),
+(S[index].S.g*float(ColorSetting)),
+(S[index].S.b*float(ColorSetting)));
+		break;
+	case 2:
+fragColorStore = GlowMultValue+vec3(
+(P[index].S.r*float(ColorSetting)),
+(P[index].S.g*float(ColorSetting)),
+(P[index].S.b*float(ColorSetting)));
+		break;
+	case 3:
+fragColorStore = GlowMultValue+vec3(
+(B[index].S.r*float(ColorSetting)),
+(B[index].S.g*float(ColorSetting)),
+(B[index].S.b*float(ColorSetting)));
+		break;
+	default:
+fragColorStore = vec3(GlowMultValue);
+		break;
+	}
+	x=int(stepcount);
+
 }else if(length(C.C)>40.f){
-fragColorStore = vec4(0,0,0,1.0);
+fragColorStore = vec3(GlowMultValue);
 x=int(stepcount);}
+C.C+=(C.V*distOut);
 }
-fragColor = fragColorStore;
-    // Output to screen
+
+C.V = L.C;
+CStore = C.C;
+C.V = normalize(C.V); 
+typeindex = -1;
+index = -1;
+distOut   = 10000.;
+StoreDist = distOut;
+
+for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=distOut,OBJIndex[i]=-1;
+
+for(int x=0;x<int(shadowstepcount);x++){//
+
+for(int i=0;i<SphereSize;i++){//itrates through spheres
+if(OBJDist[1]>SDFSphere(S[i].C,S[i].R,C.C)){
+OBJDist[1]=SDFSphere(S[i].C,S[i].R,C.C),OBJIndex[1]=i;
+}//else if (distOut<.1) i=SphereSize;
+}
+
+for(int i=0;i<PlaneSize;i++){//itrates through Planes
+if(OBJDist[2]>SDFPlane(P[i].V,C.C)){
+OBJDist[2]=SDFPlane(P[i].V,C.C),OBJIndex[2]=i;
+}//else if (distOut<.1) i=SphereSize;
+}
+
+for(int i=0;i<PlaneSize;i++){//itrates through Boxes
+if(OBJDist[3]>SDFBox(B[i].C,B[i].LWH,B[i].R,C.C)){
+OBJDist[3]=SDFBox(B[i].C,B[i].LWH,B[i].R,C.C),OBJIndex[3]=i;
+}//else if (distOut<.1) i=SphereSize;
+}
+
+for(int i=1;i<OBJTypeSize;i++){
+if(StoreDist>OBJDist[i]){
+StoreDist=OBJDist[i];
+typeindex=i;
+index = OBJIndex[i];
+}}
+
+C.C+=(C.V*StoreDist);
+if(StoreDist<MinStoreDist){
+MinStoreDist=StoreDist;
+distOut = length(C.C-CStore);
+}
+//if(length(L.C-CStore)<=distOut) x=int(stepcount);	
+}
+
+
+
+fragColorStore *= vec3(atan(MinStoreDist,distOut));
+fragColor = vec4(fragColorStore,1.);
+	// Output to screen
 }
