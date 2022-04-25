@@ -5,10 +5,11 @@ SphereSize = SphereSquare*SphereSquare,
 PlaneSize  = 1,
 BoxSize = 1;
 const float distOutFCCAM =20.f,
-GlowValue = 100.;
-const int shadowstepcount = 100,stepcount = 1000;
+GlowValue = 2000.;
+const int shadowstepcount = 2,stepcount = 1000;
 const bool
 GlowSetting   = false,
+GlowSign	  = true,
 ColorSetting  = true,
 ShadowSetting = true;
 struct Camera{vec3 V,C;}C;
@@ -29,7 +30,7 @@ float dots(vec3 l,vec3 l1){return (l1.x*l.x+l1.y*l.y+l1.z*l.z)/(abs(l1.x*l1.x+l1
 vec3 camoffset (vec3 v,vec2 o){return vec3(((v.x)-(v.y*o.x)-(o.y*v.z*v.x)),((v.y)+(v.x*o.x)-(o.y*v.z*v.y)),((v.z)+(o.y*v.x*v.x)+(o.y*v.y*v.y)));}
 float SDFPlane (vec3 p,vec3 c) {return abs(dots(c,p))/length(p);}
 float SDFSphere (vec3 S,float R, vec3 C) {return length(S-C)-R;}
-float SDFBox(vec3 c,vec3 lwh,float r,vec3 C){vec3 q = abs(C+c)+ r - lwh;
+float SDFBox(vec3 c,vec3 lwh,float r,vec3 C){vec3 q = abs(C-c) + r - lwh;
 return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0)-r;}
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
@@ -38,16 +39,16 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 vec3 fragColorStore = vec3(0.,0.,0.),
 CStore = vec3(0);
 	// Normalized pixel coordinates (from 0 to 1)
-L.C = vec3(-6,-6,-10);
-L.S = vec3(1);
+L.C = vec3(0,0,-6);
+L.S = vec3(1,1,1);
 P[0].V = vec3(0,0,1.);
 P[0].S = vec3(.8);
 //P[1].V = vec3(0,0,1.);
 //P[1].S = vec3(.3);
-B[0].C = vec3(-2,-4,5);
-B[0].LWH = vec3(4,4,3);
+B[0].C = vec3(-2,-4,-5);
+B[0].LWH = vec3(2,2,1);
 B[0].S = vec3(.8,.6,.2);
-B[0].R = 1.5;
+B[0].R = .2;
 
 
 float heightCAM =(iMouse.y-(iResolution.y))/200.;
@@ -72,9 +73,9 @@ C.V = normalize(C.V);
 
 for(int x=0;x<SphereSize;x++){
 S[x].C = vec3( 
-(modf(floor(float(x)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5), 
-(modf(floor(float(x)/float(SphereSquare)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5),
-(-5));
+4.*(modf(floor(float(x)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5), 
+4.*(modf(floor(float(x)/float(SphereSquare)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5),
+(-4));
 S[x].R =.5f;
 S[x].S = vec3(
 ((S[x].C.x+float(SphereSquare)*.5)/float(SphereSquare)),
@@ -90,7 +91,8 @@ GlowMultValue;
 int 
 OBJIndex[OBJTypeSize],
 typeindex = -1,
-index = -1;
+index = -1,
+Xindex = -1;
 
 
 for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=distOut,OBJIndex[i]=-1;
@@ -125,8 +127,8 @@ index = OBJIndex[i];
 distOut = StoreDist;
 
 
-if (distOut<.1){
-GlowMultValue = (float(x*int(GlowSetting))/GlowValue);
+if (distOut<.01){
+GlowMultValue = (float((2*int(GlowSign)-1)*x*int(GlowSetting))/GlowValue);
 	switch (typeindex) {
 	case 1:
 fragColorStore = GlowMultValue+vec3(
@@ -152,13 +154,13 @@ fragColorStore = vec3(GlowMultValue);
 	}
 	x=int(stepcount);
 
-}else if(length(C.C)>40.f){
+}else if(length(C.C)>100.f){
 fragColorStore = vec3(GlowMultValue);
 x=int(stepcount);}
 C.C+=(C.V*distOut);
 }
 
-C.V = L.C;
+C.V = C.C-L.C;
 CStore = C.C;
 C.V = normalize(C.V); 
 typeindex = -1;
@@ -196,17 +198,30 @@ index = OBJIndex[i];
 }}
 
 C.C+=(C.V*StoreDist);
-if(StoreDist<MinStoreDist){
+if(StoreDist<MinStoreDist&&x<40){
 MinStoreDist=StoreDist;
 distOut = length(C.C-CStore);
+Xindex = x;
 }
-//if(distOut<.1) 		 {x=int(stepcount);}	
-//else if(distOut>75.) {x=int(stepcount);}	
-
+if(x>9){
+if(distOut<.0001){
+x=int(shadowstepcount);
+//fragColorStore = vec3(0);	
+}
+}
+if(distOut>100.) {
+x=int(shadowstepcount);
+//fragColorStore = vec3(0);	
 }
 
+}
+fragColorStore *= max(min(L.S*vec3(atan(distOut,MinStoreDist)-1.),1.),0.);	
+	
 
-fragColorStore *= vec3(atan(MinStoreDist/distOut));
+fragColorStore *= 1.;	
+
+
+//fragColorStore /= 2.;
 fragColor = vec4(fragColorStore,1.);
 	// Output to screen
 }
