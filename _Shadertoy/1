@@ -1,3 +1,4 @@
+#define pi 3.141592
 const int SphereSquare =5;
 const int 
 OBJTypeSize = 4,
@@ -6,7 +7,7 @@ PlaneSize  = 1,
 BoxSize = 1;
 const float distOutFCCAM =20.f,
 GlowValue = 2000.;
-const int shadowstepcount = 2,stepcount = 1000;
+const int shadowstepcount = 6,stepcount = 1000;
 const bool
 GlowSetting   = false,
 GlowSign	  = true,
@@ -36,10 +37,10 @@ return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0)-r;}
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
 
-vec3 fragColorStore = vec3(0.,0.,0.),
+vec3 fragColorStore = vec3(0),
 CStore = vec3(0);
 	// Normalized pixel coordinates (from 0 to 1)
-L.C = vec3(0,0,-6);
+L.C = vec3(1,1,-6);
 L.S = vec3(1,1,1);
 P[0].V = vec3(0,0,1.);
 P[0].S = vec3(.8);
@@ -203,10 +204,10 @@ MinStoreDist=StoreDist;
 distOut = length(C.C-CStore);
 Xindex = x;
 }
-if(x>9){
-if(distOut<.0001){
+if(x>5){
+if(distOut<.1){
 x=int(shadowstepcount);
-//fragColorStore = vec3(0);	
+fragColorStore = vec3(.5);	
 }
 }
 if(distOut>100.) {
@@ -215,10 +216,10 @@ x=int(shadowstepcount);
 }
 
 }
-fragColorStore *= max(min(L.S*vec3(atan(distOut,MinStoreDist)-1.),1.),0.);	
+fragColorStore *= (max(min(L.S*vec3(atan(distOut,MinStoreDist))/(pi/2.),pi/2.),-pi/2.));	
 	
 
-fragColorStore *= 1.;	
+fragColorStore *= .5;	
 
 
 //fragColorStore /= 2.;
