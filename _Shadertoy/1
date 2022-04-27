@@ -1,19 +1,19 @@
 #define pi 3.141592
-const int SphereSquare =2;
+const int SphereSquare =1;
 const int 
 OBJTypeSize = 5,
 SphereSize = SphereSquare*SphereSquare,
 PlaneSize  = 1,
 BoxSize = 1,
 TorusSize = 1;
-const float distOutFCCAM =20.f,
-GlowValue = 2000.;
-const int shadowstepcount = 6,stepcount = 1000;
+const float distOutFCCAM =30.f,
+GlowValue = 1000.;
+const int shadowstepcount = 6,stepcount = 5000;
 const bool
-GlowSetting   = false,
+GlowSetting   = true,
 GlowSign	  = true,
 ColorSetting  = true,
-ShadowSetting = true;
+ShadowSetting = false;
 struct Camera{vec3 V,C;}C;
 struct Plane{vec3 V,S;}P[PlaneSize];
 struct Sphere{
@@ -41,9 +41,8 @@ float SDFBox(vec3 c,vec3 lwh,float r,vec3 C){vec3 q = abs(C-c) + r - lwh;
 return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0)-r;}
 float SDFTorus(vec3 P,vec3 C,vec3 V,float R1,float R2){
 //vec3 O=P-C;
-return length((P-C)-R1*normalize(cross(normalize(V),cross((P-C),normalize(V)))))-R2;
-return length(
-	(P-C)-R1*normalize(dots((P-C),(1.-normalize(V)))))-R2;
+return length((P-C)-R1*(cross(normalize(V),normalize(cross((P-C),normalize(V))))))-R2;
+//return length((P-C)-R1*normalize(dots((P-C),(1.-normalize(V)))))-R2;
 }
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
@@ -62,10 +61,10 @@ B[0].C = vec3(-2,-4,-5);
 B[0].LWH = vec3(2,2,1);
 B[0].S = vec3(.8,.6,.2);
 B[0].R = .2;
-T[0].C = vec3(-4);
-T[0].V = vec3(0,0,1);
-T[0].R1 = 3.;
-T[0].R2 = 4.;
+T[0].C = vec3(4,-4,-4);
+T[0].V = vec3(1,1,1);
+T[0].R1 = 6.;
+T[0].R2 = 2.;
 
 
 float heightCAM =(iMouse.y-(iResolution.y))/200.;
@@ -244,8 +243,9 @@ x=int(shadowstepcount);
 }
 
 }
+if(ShadowSetting==true){
 fragColorStore *= (max(min(L.S*vec3(atan(distOut,MinStoreDist))/(pi/2.),pi/2.),-pi/2.));	
-	
+}
 
 fragColorStore *= .5;	
 
