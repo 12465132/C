@@ -32,7 +32,10 @@ float R1,R2;
 struct Light{vec3 C,S;}L;
 float modf (float x,float y) {return(x - y * floor(x/y));}
 float dots(vec3 l,vec3 l1){return (l1.x*l.x+l1.y*l.y+l1.z*l.z)/(abs(l1.x*l1.x+l1.y*l1.y+l1.z*l1.z));}
-vec3 cross(vec3 o,vec3 i){ return vec3( o.y*i.z-o.z*i.y, o.z*i.x-o.x*i.z, o.x*i.y-o.y*i.z);}
+vec3 cross(vec3 o,vec3 i){ return vec3( 
+	o.y*i.z-o.z*i.y, 
+	o.z*i.x-o.x*i.z, 
+	o.y*i.y-o.z*i.z);}
 vec3 camoffset (vec3 v,vec2 o){return vec3(((v.x)-(v.y*o.x)-(o.y*v.z*v.x)),((v.y)+(v.x*o.x)-(o.y*v.z*v.y)),((v.z)+(o.y*v.x*v.x)+(o.y*v.y*v.y)));}
 float SDFRevolve(void){ return 0.;}//TODO
 float SDFPlane (vec3 p,vec3 c) {return abs(dots(c,p))/length(p);}
@@ -41,8 +44,10 @@ float SDFBox(vec3 c,vec3 lwh,float r,vec3 C){vec3 q = abs(C-c) + r - lwh;
 return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0)-r;}
 float SDFTorus(vec3 P,vec3 C,vec3 V,float R1,float R2){
 //vec3 O=P-C;
-return length((P-C)-R1*(cross(normalize(V),normalize(cross((P-C),normalize(V))))))-R2;
-//return length((P-C)-R1*normalize(dots((P-C),(1.-normalize(V)))))-R2;
+//return length((P-C)+R1*normalize(cross(normalize(V),normalize(cross((P-C),normalize(V))))))-R2;
+return length((P-C)-R1*normalize(dots((P-C),(1.-normalize(V)))))-R2;
+//vec2 T = vec2(dots(P,V),P+dots(P,V)*V);
+//return length(T)-R2;
 }
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
@@ -61,10 +66,10 @@ B[0].C = vec3(-2,-4,-5);
 B[0].LWH = vec3(2,2,1);
 B[0].S = vec3(.8,.6,.2);
 B[0].R = .2;
-T[0].C = vec3(4,-4,-4);
-T[0].V = vec3(1,1,1);
-T[0].R1 = 6.;
-T[0].R2 = 2.;
+T[0].C = vec3(-4,4,-4);
+T[0].V = vec3(0,-4,3);
+T[0].R1 = 5.;
+T[0].R2 = 1.;
 
 
 float heightCAM =(iMouse.y-(iResolution.y))/200.;
