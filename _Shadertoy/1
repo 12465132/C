@@ -6,8 +6,7 @@ SphereSize = SphereSquare*SphereSquare,
 PlaneSize  = 1,
 BoxSize = 1;
 const float distOutFCCAM =20.f,
-GlowValue = 100.,
-Glowscale = 3.;
+GlowValue = 500.;
 const int shadowstepcount = 10,stepcount = 1000;
 const bool
 GlowSetting   = true,
@@ -34,7 +33,6 @@ float R;
 float modf (float x,float y) {return(x - y * floor(x/y));}
 float dots(vec3 l,vec3 l1){return (l1.x*l.x+l1.y*l.y+l1.z*l.z)/(abs(l1.x*l1.x+l1.y*l1.y+l1.z*l1.z));}
 float angle(vec3 I,vec3 O){return asin(dots(I,O)/(length(I)*length(O)));}
-float smoothclamp(float I,float min,float max,float err){return 1./(1.+pow(2.71828,((4.*I*err)-(2.*err*(min+max)))/(-1.*(max-min))));}
 vec3 camoffset (vec3 v,vec2 o){return vec3(((v.x)-(v.y*o.x)-(o.y*v.z*v.x)),((v.y)+(v.x*o.x)-(o.y*v.z*v.y)),((v.z)+(o.y*v.x*v.x)+(o.y*v.y*v.y)));}
 Data init(){Data OD;OD.SDFDist = 10000000.,OD.typeindex=-1,OD.index=-1;return OD;}
 float SDFPlane (vec3 p,vec3 c) {return abs(dots(c,p))/length(p);}
@@ -157,8 +155,7 @@ typeindex = D.typeindex;
 index = D.index;
 
 if (distOut<.01){
-GlowMultValue = (float((2*int(GlowSign)-1)*int(GlowSetting)*x));
-GlowMultValue = smoothclamp(GlowMultValue,2.,GlowValue,Glowscale);
+GlowMultValue = (float((2*int(GlowSign)-1)*x*int(GlowSetting))/GlowValue);
 	switch (typeindex) {
 	case 1:
 fragColorStore = GlowMultValue+vec3(
