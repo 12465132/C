@@ -10,8 +10,8 @@ GlowValue = 500.;
 const int shadowstepcount = 10,stepcount = 1000;
 const bool
 GlowSetting   = true,
-GlowSign	  = true,
-ColorSetting  = false,
+GlowSign	  = false,
+ColorSetting  = true,
 ShadowSetting = false;
 
 struct Camera{vec3 V,C;}C;
@@ -187,7 +187,7 @@ x=int(stepcount);		   			   }
 
 C.C+=(C.V*distOut);
 }
-//fragColorStore = ((genNormal(C.C,P,S,B)));
+fragColorStore = ((genNormal(C.C,P,S,B)));
 
 C.V = C.C-L.C;
 CStore = C.C;
