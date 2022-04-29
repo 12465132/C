@@ -6,11 +6,16 @@ SphereSize = SphereSquare*SphereSquare,
 PlaneSize  = 1,
 BoxSize = 1;
 const float distOutFCCAM =20.f,
-GlowValue = 500.;
+GlowValue = 100.,
+Glowscale = 2.,
+GlowValue2 = 200.,
+Glowscale2 = 4.,
+GlowMult2 = .9;
+
 const int shadowstepcount = 10,stepcount = 1000;
 const bool
 GlowSetting   = true,
-GlowSign	  = false,
+GlowSign	  = true,
 ColorSetting  = true,
 ShadowSetting = false;
 
@@ -33,6 +38,7 @@ float R;
 float modf (float x,float y) {return(x - y * floor(x/y));}
 float dots(vec3 l,vec3 l1){return (l1.x*l.x+l1.y*l.y+l1.z*l.z)/(abs(l1.x*l1.x+l1.y*l1.y+l1.z*l1.z));}
 float angle(vec3 I,vec3 O){return asin(dots(I,O)/(length(I)*length(O)));}
+float smoothclamp(float I,float min,float max,float err){return 1./(1.+pow(2.71828,((4.*I*err)-(2.*err*(min+max)))/(-1.*(max-min))));}
 vec3 camoffset (vec3 v,vec2 o){return vec3(((v.x)-(v.y*o.x)-(o.y*v.z*v.x)),((v.y)+(v.x*o.x)-(o.y*v.z*v.y)),((v.z)+(o.y*v.x*v.x)+(o.y*v.y*v.y)));}
 Data init(){Data OD;OD.SDFDist = 10000000.,OD.typeindex=-1,OD.index=-1;return OD;}
 float SDFPlane (vec3 p,vec3 c) {return abs(dots(c,p))/length(p);}
@@ -153,41 +159,47 @@ D = SDFGlobal(C.C,P,S,B);
 distOut = D.SDFDist;
 typeindex = D.typeindex;
 index = D.index;
+Xindex = x;
+
 
 if (distOut<.01){
-GlowMultValue = (float((2*int(GlowSign)-1)*x*int(GlowSetting))/GlowValue);
 	switch (typeindex) {
 	case 1:
-fragColorStore = GlowMultValue+vec3(
+fragColorStore = vec3(
 (S[index].S.r*float(ColorSetting)),
 (S[index].S.g*float(ColorSetting)),
 (S[index].S.b*float(ColorSetting)));
 		break;
 	case 2:
-fragColorStore = GlowMultValue+vec3(
+fragColorStore = vec3(
 (P[index].S.r*float(ColorSetting)),
 (P[index].S.g*float(ColorSetting)),
 (P[index].S.b*float(ColorSetting)));
 		break;
 	case 3:
-fragColorStore = GlowMultValue+vec3(
+fragColorStore = vec3(
 (B[index].S.r*float(ColorSetting)),
 (B[index].S.g*float(ColorSetting)),
 (B[index].S.b*float(ColorSetting)));
 		break;
 	default:
-fragColorStore = vec3(GlowMultValue);
+//fragColorStore = vec3(GlowMultValue);
 		break;
 	}
 	x=int(stepcount);
 
 			}else if(length(C.C)>100.f){
-fragColorStore = vec3(GlowMultValue);
+//fragColorStore = vec3(GlowMultValue);
 x=int(stepcount);		   			   }
-
 C.C+=(C.V*distOut);
 }
-fragColorStore = ((genNormal(C.C,P,S,B)));
+GlowMultValue = (float((2*int(GlowSign)-1)*int(GlowSetting)*Xindex));
+GlowMultValue = smoothclamp(GlowMultValue,2.,GlowValue,Glowscale)-
+	  GlowMult2*smoothclamp(GlowMultValue,2.,GlowValue2,Glowscale2);
+
+fragColorStore = vec3(GlowMultValue);
+
+//fragColorStore = ((genNormal(C.C,P,S,B)));
 
 C.V = C.C-L.C;
 CStore = C.C;
