@@ -4,20 +4,25 @@ const int
 OBJTypeSize = 4,
 SphereSize = SphereSquare*SphereSquare,
 PlaneSize  = 1,
-BoxSize = 1;
+BoxSize = 1,
+MandelbulbSize = 1;
 const float distOutFCCAM =20.f,
-GlowValue = 100.,
-Glowscale = 2.,
+GlowValue = 60.,
+Glowscale = 5.,
 GlowValue2 = 200.,
 Glowscale2 = 4.,
-GlowMult2 = .9;
+GlowMult2 = .0;
 
 const int shadowstepcount = 10,stepcount = 1000;
 const bool
-GlowSetting   = true,
-GlowSign	  = true,
-ColorSetting  = true,
-ShadowSetting = false;
+GlowSetting   		= true,
+GlowSign	  		= true,
+ColorSetting  		= false,
+ShadowSetting 		= false,
+SphereSetting 		= true,
+PlaneSetting  		= false,
+BoxSetting 	  		= true,
+Mandelbulbsetting	= true;
 
 struct Camera{vec3 V,C;}C;
 struct Light{vec3 C,S;}L;
@@ -39,37 +44,44 @@ float modf (float x,float y) {return(x - y * floor(x/y));}
 float dots(vec3 l,vec3 l1){return (l1.x*l.x+l1.y*l.y+l1.z*l.z)/(abs(l1.x*l1.x+l1.y*l1.y+l1.z*l1.z));}
 float angle(vec3 I,vec3 O){return asin(dots(I,O)/(length(I)*length(O)));}
 float smoothclamp(float I,float min,float max,float err){return 1./(1.+pow(2.71828,((4.*I*err)-(2.*err*(min+max)))/(-1.*(max-min))));}
-vec3 camoffset (vec3 v,vec2 o){return vec3(((v.x)-(v.y*o.x)-(o.y*v.z*v.x)),((v.y)+(v.x*o.x)-(o.y*v.z*v.y)),((v.z)+(o.y*v.x*v.x)+(o.y*v.y*v.y)));}
+vec3 camoffset (vec3 v,vec2 o){return normalize(vec3(v.x,v.y,v.z))+normalize(vec3(-(v.y),(v.x),0.))*o.x+normalize(vec3(-v.z*v.x,-v.z*v.y,v.x*v.x+v.y*v.y))*o.y;}
 Data init(){Data OD;OD.SDFDist = 10000000.,OD.typeindex=-1,OD.index=-1;return OD;}
 float SDFPlane (vec3 p,vec3 c) {return abs(dots(c,p))/length(p);}
 float SDFSphere (vec3 S,float R, vec3 C) {return length(S-C)-R;}
 float SDFBox(vec3 c,vec3 lwh,float r,vec3 C){vec3 q = abs(C-c) + r - lwh;
 return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0)-r;}
+vec3 mb(vec3 p) {
+p.xyz = p.xzy;vec3 z = p;vec3 dz=vec3(0.0);float power = 8.0;float r, theta, phi;float dr = 1.0;float t0 = 1.0;
+for(int i = 0; i < 7; ++i) {
+r = length(z);if(r > 2.0) continue;theta = atan(z.y / z.x);
+#ifdef phase_shift_on
+phi = asin(z.z / r) + iTime*0.1;
+#else
+phi = asin(z.z / r);
+#endif
+dr = pow(r, power - 1.0) * dr * power + 1.0;r = pow(r, power);theta = theta * power;phi = phi * power;z = r * vec3(cos(theta)*cos(phi), sin(theta)*cos(phi), sin(phi)) + p;t0 = min(t0, r);}
+return vec3(0.5 * log(r) * r / dr, t0, 0.0);}
 Data SDFGlobal(vec3 CC,Plane P[PlaneSize],Sphere S[SphereSize],Box B[BoxSize]){
 float OBJDist[OBJTypeSize];
 int OBJIndex[OBJTypeSize];
 Data OUT;
 OUT.SDFDist = 10000.;
 for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=OUT.SDFDist,OBJIndex[i]=-1;
-
+if(SphereSetting==true){
 for(int i=0;i<SphereSize;i++){//itrates through spheres
 if(OBJDist[1]>SDFSphere(S[i].C,S[i].R,C.C)){
 OBJDist[1]=SDFSphere(S[i].C,S[i].R,C.C),OBJIndex[1]=i;
-}//else if (distOut<.1) i=SphereSize;
-}
-
+}}}
+if(PlaneSetting==true){
 for(int i=0;i<PlaneSize;i++){//itrates through spheres
 if(OBJDist[2]>SDFPlane(P[i].V,C.C)){
 OBJDist[2]=SDFPlane(P[i].V,C.C),OBJIndex[2]=i;
-}//else if (distOut<.1) i=SphereSize;
-}
-
+}}}
+if(BoxSetting==true){
 for(int i=0;i<PlaneSize;i++){//itrates through spheres
 if(OBJDist[3]>SDFBox(B[i].C,B[i].LWH,B[i].R,C.C)){
 OBJDist[3]=SDFBox(B[i].C,B[i].LWH,B[i].R,C.C),OBJIndex[3]=i;
-}//else if (distOut<.1) i=SphereSize;
-}
-
+}}}
 for(int i=1;i<OBJTypeSize;i++){
 if(OUT.SDFDist>OBJDist[i]){
 OUT.SDFDist=OBJDist[i];
@@ -91,7 +103,7 @@ return normalize(N);}
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
 
-vec3 fragColorStore = vec3(0.,0.,0.),
+vec3 fragColorStore = vec3(0),
 CStore = vec3(0);
 	// Normalized pixel coordinates (from 0 to 1)
 L.C = vec3(0,0,-6);
@@ -108,15 +120,17 @@ B[0].R = .2;
 
 float heightCAM =(iMouse.y-(iResolution.y))/200.;
 float anglecamradian=-(iMouse.x-(iResolution.x))/40.;
-C.C = vec3(
-sin(heightCAM)*cos(-anglecamradian)*distOutFCCAM,
-sin(heightCAM)*sin(-anglecamradian)*distOutFCCAM,
-cos(heightCAM)*distOutFCCAM);
-
-C.V = vec3(
--sin(heightCAM)*cos(-anglecamradian),
--sin(heightCAM)*sin(-anglecamradian),
--cos(heightCAM));
+C.C = distOutFCCAM*vec3(
+sin(heightCAM)*cos(anglecamradian),
+sin(heightCAM)*sin(-anglecamradian),
+cos(heightCAM));
+//C.C = vec3(2,2,0);
+// C.V = vec3(
+// -sin(heightCAM)*cos(-anglecamradian),
+// -sin(heightCAM)*sin(-anglecamradian),
+// -cos(heightCAM));
+//C.C = 50.*vec3(1);
+C.V = -C.C;
 
 vec2 uv = fragCoord/iResolution.xy-.5;
 uv.y *= float(iResolution.y/iResolution.x);
@@ -193,11 +207,12 @@ fragColorStore = vec3(
 x=int(stepcount);		   			   }
 C.C+=(C.V*distOut);
 }
-GlowMultValue = (float((2*int(GlowSign)-1)*int(GlowSetting)*Xindex));
-GlowMultValue = smoothclamp(GlowMultValue,2.,GlowValue,Glowscale)-
+GlowMultValue = (float(Xindex));
+GlowMultValue *= smoothclamp(GlowMultValue,2.,GlowValue,Glowscale)-
 	  GlowMult2*smoothclamp(GlowMultValue,2.,GlowValue2,Glowscale2);
+GlowMultValue *= (float((2*int(GlowSign)-1)*Xindex)*float(GlowSetting));
 
-fragColorStore = vec3(GlowMultValue);
+fragColorStore += vec3(GlowMultValue);
 
 //fragColorStore = ((genNormal(C.C,P,S,B)));
 
