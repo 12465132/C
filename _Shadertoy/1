@@ -7,20 +7,20 @@ PlaneSize  = 1,
 BoxSize = 1,
 MandelbulbSize = 1;
 const float distOutFCCAM =20.f,
-GlowValue = 60.,
-Glowscale = 5.,
-GlowValue2 = 200.,
-Glowscale2 = 4.,
+GlowValue = 200.,
+Glowscale = 6.,
+GlowValue2 = 100.,
+Glowscale2 = 1.,
 GlowMult2 = .0;
 
 const int shadowstepcount = 10,stepcount = 1000;
 const bool
 GlowSetting   		= true,
-GlowSign	  		= true,
-ColorSetting  		= false,
+GlowSign	  		= false,
+ColorSetting  		= true,
 ShadowSetting 		= false,
 SphereSetting 		= true,
-PlaneSetting  		= false,
+PlaneSetting  		= true,
 BoxSetting 	  		= true,
 Mandelbulbsetting	= true;
 
@@ -40,16 +40,24 @@ struct Box{
 vec3 C,LWH,S;
 float R; 
 }B[BoxSize];
-float modf (float x,float y) {return(x - y * floor(x/y));}
-float dots(vec3 l,vec3 l1){return (l1.x*l.x+l1.y*l.y+l1.z*l.z)/(abs(l1.x*l1.x+l1.y*l1.y+l1.z*l1.z));}
-float angle(vec3 I,vec3 O){return asin(dots(I,O)/(length(I)*length(O)));}
-float smoothclamp(float I,float min,float max,float err){return 1./(1.+pow(2.71828,((4.*I*err)-(2.*err*(min+max)))/(-1.*(max-min))));}
+float modf (float x,float y) 
+{return(x - y * floor(x/y));}
+float dots(vec3 l,vec3 l1)
+{return (l1.x*l.x+l1.y*l.y+l1.z*l.z)/(abs(l1.x*l1.x+l1.y*l1.y+l1.z*l1.z));}
+float angle(vec3 I,vec3 O)
+{return asin(dots(I,O)/(length(I)*length(O)));}
+float smoothclamp(float I,float min,float max,float err)
+{return 1./(1.+pow(2.71828,((4.*I*err)-(2.*err*(min+max)))/(-1.*(max-min))));}
 vec3 camoffset (vec3 v,vec2 o){return normalize(vec3(v.x,v.y,v.z))+normalize(vec3(-(v.y),(v.x),0.))*o.x+normalize(vec3(-v.z*v.x,-v.z*v.y,v.x*v.x+v.y*v.y))*o.y;}
 Data init(){Data OD;OD.SDFDist = 10000000.,OD.typeindex=-1,OD.index=-1;return OD;}
-float SDFPlane (vec3 p,vec3 c) {return abs(dots(c,p))/length(p);}
-float SDFSphere (vec3 S,float R, vec3 C) {return length(S-C)-R;}
-float SDFBox(vec3 c,vec3 lwh,float r,vec3 C){vec3 q = abs(C-c) + r - lwh;
-return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0)-r;}
+float SDFPlane (vec3 p,vec3 c)
+ {return abs(dot(p,c))/length(p);}
+float SDFSphere (vec3 S,float R, vec3 C) 
+{return length(S+C)-R;}
+float SDFBox(vec3 c,vec3 lwh,float r,vec3 C)
+{vec3 q = abs(C+c) + r - lwh;
+return length(max(q,0.0)) + 
+min(max(q.x,max(q.y,q.z)),0.0)-r;}
 vec3 mb(vec3 p) {
 p.xyz = p.xzy;vec3 z = p;vec3 dz=vec3(0.0);float power = 8.0;float r, theta, phi;float dr = 1.0;float t0 = 1.0;
 for(int i = 0; i < 7; ++i) {
@@ -103,17 +111,17 @@ return normalize(N);}
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
 
-vec3 fragColorStore = vec3(0),
+vec3 fragColorStore = vec3(1),
 CStore = vec3(0);
 	// Normalized pixel coordinates (from 0 to 1)
 L.C = vec3(0,0,-6);
 L.S = vec3(1,1,1);
-P[0].V = vec3(0,0,1.);
+P[0].V = vec3(sin(iTime),cos(iTime),0);
 P[0].S = vec3(.8);
 //P[1].V = vec3(0,0,1.);
 //P[1].S = vec3(.3);
-B[0].C = vec3(-2,-4,-5);
-B[0].LWH = vec3(2,2,1);
+B[0].C = vec3(0,0,5);
+B[0].LWH = vec3(sin(iTime),cos(iTime),sin(iTime))+2.;
 B[0].S = vec3(.8,.6,.2);
 B[0].R = .2;
 
@@ -124,12 +132,10 @@ C.C = distOutFCCAM*vec3(
 sin(heightCAM)*cos(anglecamradian),
 sin(heightCAM)*sin(-anglecamradian),
 cos(heightCAM));
-//C.C = vec3(2,2,0);
-// C.V = vec3(
-// -sin(heightCAM)*cos(-anglecamradian),
-// -sin(heightCAM)*sin(-anglecamradian),
-// -cos(heightCAM));
-//C.C = 50.*vec3(1);
+C.C = distOutFCCAM*vec3(
+	sin(.200*iTime),
+	cos(.333*iTime),
+	cos(heightCAM));
 C.V = -C.C;
 
 vec2 uv = fragCoord/iResolution.xy-.5;
@@ -144,7 +150,10 @@ for(int x=0;x<SphereSize;x++){
 S[x].C = vec3( 
 4.*(modf(floor(float(x)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5), 
 4.*(modf(floor(float(x)/float(SphereSquare)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5),
-(-4));
+0);
+S[x].C += vec3( 0,0,
+(sin(S[x].C.x+iTime)+cos(S[x].C.y+iTime))/2.
+);
 S[x].R =.5f;
 S[x].S = vec3(
 ((S[x].C.x+float(SphereSquare)*.5)/float(SphereSquare)),
@@ -210,7 +219,7 @@ C.C+=(C.V*distOut);
 GlowMultValue = (float(Xindex));
 GlowMultValue *= smoothclamp(GlowMultValue,2.,GlowValue,Glowscale)-
 	  GlowMult2*smoothclamp(GlowMultValue,2.,GlowValue2,Glowscale2);
-GlowMultValue *= (float((2*int(GlowSign)-1)*Xindex)*float(GlowSetting));
+GlowMultValue *= (float((2*int(GlowSign)-1))*float(GlowSetting));
 
 fragColorStore += vec3(GlowMultValue);
 
