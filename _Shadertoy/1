@@ -1,11 +1,11 @@
 #define pi 3.1415926535897932384626433832795
 const int SphereSquare =5;
 const int 
-OBJTypeSize = 4,
+OBJTypeSize = 5,
 SphereSize = SphereSquare*SphereSquare,
 PlaneSize  = 1,
 BoxSize = 1,
-MandelbulbSize = 1;
+TorusSize = 1;
 const float distOutFCCAM =20.f,
 GlowValue = 200.,
 Glowscale = 6.,
@@ -20,9 +20,9 @@ GlowSign	  		= false,
 ColorSetting  		= true,
 ShadowSetting 		= false,
 SphereSetting 		= true,
-PlaneSetting  		= true,
+PlaneSetting  		= false,
 BoxSetting 	  		= true,
-Mandelbulbsetting	= true;
+TorusSetting		= true;
 
 struct Camera{vec3 V,C;}C;
 struct Light{vec3 C,S;}L;
@@ -40,6 +40,10 @@ struct Box{
 vec3 C,LWH,S;
 float R; 
 }B[BoxSize];
+struct Torus{
+vec3 V,C,S;
+float R1,R2;
+}T[TorusSize];
 float modf (float x,float y) 
 {return(x - y * floor(x/y));}
 float dots(vec3 l,vec3 l1)
@@ -58,18 +62,13 @@ float SDFBox(vec3 c,vec3 lwh,float r,vec3 C)
 {vec3 q = abs(C+c) + r - lwh;
 return length(max(q,0.0)) + 
 min(max(q.x,max(q.y,q.z)),0.0)-r;}
-vec3 mb(vec3 p) {
-p.xyz = p.xzy;vec3 z = p;vec3 dz=vec3(0.0);float power = 8.0;float r, theta, phi;float dr = 1.0;float t0 = 1.0;
-for(int i = 0; i < 7; ++i) {
-r = length(z);if(r > 2.0) continue;theta = atan(z.y / z.x);
-#ifdef phase_shift_on
-phi = asin(z.z / r) + iTime*0.1;
-#else
-phi = asin(z.z / r);
-#endif
-dr = pow(r, power - 1.0) * dr * power + 1.0;r = pow(r, power);theta = theta * power;phi = phi * power;z = r * vec3(cos(theta)*cos(phi), sin(theta)*cos(phi), sin(phi)) + p;t0 = min(t0, r);}
-return vec3(0.5 * log(r) * r / dr, t0, 0.0);}
-Data SDFGlobal(vec3 CC,Plane P[PlaneSize],Sphere S[SphereSize],Box B[BoxSize]){
+float SDFTorus(vec3 c,vec3 v,float R1,float R2,vec3 p){
+vec3 V = normalize(v);
+vec3 P = p-c;
+vec3 s = normalize(P - V*dot(P,V));
+vec3 S = s*length(P - V*dot(P,V))-s*R1+V*dot(P,V);
+return length(S)-R2;}
+Data SDFGlobal(vec3 CC,Plane P[PlaneSize],Sphere S[SphereSize],Box B[BoxSize],Torus T[TorusSize]){
 float OBJDist[OBJTypeSize];
 int OBJIndex[OBJTypeSize];
 Data OUT;
@@ -77,18 +76,23 @@ OUT.SDFDist = 10000.;
 for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=OUT.SDFDist,OBJIndex[i]=-1;
 if(SphereSetting==true){
 for(int i=0;i<SphereSize;i++){//itrates through spheres
-if(OBJDist[1]>SDFSphere(S[i].C,S[i].R,C.C)){
+if(OBJDist[1]>SDFSphere(S[i].C,S[i].R,CC)){
 OBJDist[1]=SDFSphere(S[i].C,S[i].R,C.C),OBJIndex[1]=i;
 }}}
 if(PlaneSetting==true){
 for(int i=0;i<PlaneSize;i++){//itrates through spheres
-if(OBJDist[2]>SDFPlane(P[i].V,C.C)){
+if(OBJDist[2]>SDFPlane(P[i].V,CC)){
 OBJDist[2]=SDFPlane(P[i].V,C.C),OBJIndex[2]=i;
 }}}
 if(BoxSetting==true){
 for(int i=0;i<PlaneSize;i++){//itrates through spheres
-if(OBJDist[3]>SDFBox(B[i].C,B[i].LWH,B[i].R,C.C)){
+if(OBJDist[3]>SDFBox(B[i].C,B[i].LWH,B[i].R,CC)){
 OBJDist[3]=SDFBox(B[i].C,B[i].LWH,B[i].R,C.C),OBJIndex[3]=i;
+}}}
+if(TorusSetting==true){
+for(int i=0;i<TorusSize;i++){//itrates through spheres
+if(OBJDist[4]>SDFTorus(T[i].C,T[i].V,T[i].R1,T[i].R2,CC)){
+OBJDist[4]=SDFTorus(T[i].C,T[i].V,T[i].R1,T[i].R2,CC),OBJIndex[4]=i;
 }}}
 for(int i=1;i<OBJTypeSize;i++){
 if(OUT.SDFDist>OBJDist[i]){
@@ -97,15 +101,15 @@ OUT.typeindex=i;
 OUT.index = OBJIndex[i];
 }}
 return OUT;}
-vec3 genNormal(vec3 NCC,Plane NP[PlaneSize],Sphere NS[SphereSize],Box NB[BoxSize]){
+vec3 genNormal(vec3 NCC,Plane NP[PlaneSize],Sphere NS[SphereSize],Box NB[BoxSize],Torus NT[TorusSize]){
 Data ND;vec2 e = vec2(.001, 0.0);vec3 N,S;
-ND = SDFGlobal(NCC+e.xyy,NP,NS,NB);
+ND = SDFGlobal(NCC+e.xyy,NP,NS,NB,NT);
 S.x = ND.SDFDist; 
-ND = SDFGlobal(NCC+e.yxy,NP,NS,NB);
+ND = SDFGlobal(NCC+e.yxy,NP,NS,NB,NT);
 S.y = ND.SDFDist; 
-ND = SDFGlobal(NCC+e.yyx,NP,NS,NB);
+ND = SDFGlobal(NCC+e.yyx,NP,NS,NB,NT);
 S.z = ND.SDFDist; 
-ND = SDFGlobal(NCC		,NP,NS,NB);// TODO:optmize
+ND = SDFGlobal(NCC		,NP,NS,NB,NT);// TODO:optmize
 N = S+vec3(ND.SDFDist);
 return normalize(N);}
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
@@ -118,8 +122,12 @@ L.C = vec3(0,0,-6);
 L.S = vec3(1,1,1);
 P[0].V = vec3(sin(iTime),cos(iTime),0);
 P[0].S = vec3(.8);
-//P[1].V = vec3(0,0,1.);
-//P[1].S = vec3(.3);
+T[0].V = vec3(sin(iTime),cos(iTime),sin(iTime));
+T[0].C = vec3(1,2,4)+T[0].V;
+T[0].S = vec3(.8,1,.3);
+T[0].R1= 3.;
+T[0].R2= 2.;
+
 B[0].C = vec3(0,0,5);
 B[0].LWH = vec3(sin(iTime),cos(iTime),sin(iTime))+2.;
 B[0].S = vec3(.8,.6,.2);
@@ -177,7 +185,7 @@ for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=distOut,OBJIndex[i]=-1;
 
 for(int x=0;x<int(stepcount);x++){//
 
-D = SDFGlobal(C.C,P,S,B);
+D = SDFGlobal(C.C,P,S,B,T);
 
 distOut = D.SDFDist;
 typeindex = D.typeindex;
@@ -204,6 +212,12 @@ fragColorStore = vec3(
 (B[index].S.r*float(ColorSetting)),
 (B[index].S.g*float(ColorSetting)),
 (B[index].S.b*float(ColorSetting)));
+		break;
+	case 4:
+fragColorStore = vec3(
+(T[index].S.r*float(ColorSetting)),
+(T[index].S.g*float(ColorSetting)),
+(T[index].S.b*float(ColorSetting)));
 		break;
 	default:
 //fragColorStore = vec3(GlowMultValue);
@@ -240,7 +254,7 @@ for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=distOut,OBJIndex[i]=-1;
 
 for(int x=0;x<shadowstepcount;x++){//
 // genNormal(C.C,P,S,B);
-D = SDFGlobal(C.C,P,S,B);
+D = SDFGlobal(C.C,P,S,B,T);
 
 C.C+=(C.V*D.SDFDist);
 if(D.SDFDist<MinStoreDist){
