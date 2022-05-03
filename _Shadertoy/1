@@ -19,7 +19,7 @@ const bool
 GlowSetting   		= false,
 GlowSign	  		= false,
 ColorSetting  		= true,
-ShadowSetting 		= false,
+ShadowSetting 		= true,
 SphereSetting 		= true,
 PlaneSetting  		= true,
 BoxSetting 	  		= true,
@@ -154,7 +154,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 vec3 fragColorStore = vec3(1),
 CStore = vec3(0);
 	// Normalized pixel coordinates (from 0 to 1)
- L.C = vec3(0,0,50);
+ L.C = 20.*vec3(cos(iTime),sin(iTime),.5);
  L.S = vec3(1,1,1);
  P[0].V = vec3(0,0,-4);
  P[0].S = vec3(.8);
@@ -196,7 +196,7 @@ S[x].C = vec3(
 4.*(modf(floor(float(x)/float(SphereSquare)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5),
 0);
 S[x].C += vec3( 0,0,(sin(S[x].C.x+iTime)+cos(S[x].C.y+iTime))/3.);
-S[x].R =2.f;
+S[x].R =3.f;
 S[x].S = vec3(
 ((S[x].C.x+float(SphereSquare)*.5)/float(SphereSquare)),
 ((S[x].C.y+float(SphereSquare)*.5)/float(SphereSquare)),
