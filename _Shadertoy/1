@@ -132,7 +132,7 @@ OBJDist[5]=SDFMB(MB[i].C,MB[i].R,CC),OBJIndex[5]=i;
 }}}
 for(int i=1;i<OBJTypeSize;i++){
 if(OUT.SDFDist>OBJDist[i]){
-OUT.SDFDist=smin(OBJDist[i],OUT.SDFDist,9.);
+OUT.SDFDist=min(OBJDist[i],OUT.SDFDist);
 OUT.typeindex=i;
 OUT.index = OBJIndex[i];
 }}
@@ -154,19 +154,19 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 vec3 fragColorStore = vec3(1),
 CStore = vec3(0);
 	// Normalized pixel coordinates (from 0 to 1)
-L.C = vec3(0,0,50);
-L.S = vec3(1,1,1);
-P[0].V = vec3(sin(iTime),cos(iTime),-4);
-P[0].S = vec3(.8);
-T[0].V = 10.*vec3(sin(iTime),-cos(iTime),sin(iTime));
-T[0].C = vec3(0);
-T[0].S = normalize(T[0].V);
-T[0].R1= 4.0*(sin(iTime)+2.);
-T[0].R2= 1.0*(cos(iTime)+2.);
-B[0].C = vec3(3);
-B[0].LWH = vec3(sin(iTime),cos(iTime),sin(iTime))+2.;
-B[0].S = normalize(B[0].LWH);
-B[0].R = 2.*(sin(iTime));
+ L.C = vec3(0,0,50);
+ L.S = vec3(1,1,1);
+ P[0].V = vec3(0,0,-4);
+ P[0].S = vec3(.8);
+ T[0].V = 10.*vec3(0,0,1);
+ T[0].C = vec3(0);
+ T[0].S = vec3(sin(iTime)+.5,cos(iTime)+.5,cos(iTime)+.5);
+ T[0].R1= 4.0*(sin(iTime)+2.);
+ T[0].R2= 1.0*(cos(iTime)+1.5);
+ B[0].C = vec3(0);
+ B[0].LWH = abs(vec3(6,6,2.));
+ B[0].S = normalize(B[0].LWH);
+ B[0].R = 2.*(sin(iTime));
 MB[0].S = vec3(1,.5,1);
 MB[0].C = vec3(0);
 MB[0].R = 1.;
@@ -195,10 +195,8 @@ S[x].C = vec3(
 4.*(modf(floor(float(x)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5), 
 4.*(modf(floor(float(x)/float(SphereSquare)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5),
 0);
-S[x].C += vec3( 0,0,
-(sin(S[x].C.x+iTime)+cos(S[x].C.y+iTime))/3.
-);
-S[x].R =.5f;
+S[x].C += vec3( 0,0,(sin(S[x].C.x+iTime)+cos(S[x].C.y+iTime))/3.);
+S[x].R =2.f;
 S[x].S = vec3(
 ((S[x].C.x+float(SphereSquare)*.5)/float(SphereSquare)),
 ((S[x].C.y+float(SphereSquare)*.5)/float(SphereSquare)),
