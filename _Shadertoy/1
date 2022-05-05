@@ -6,8 +6,7 @@ SphereSize = SphereSquare*SphereSquare,
 PlaneSize  = 1,
 BoxSize = 1,
 TorusSize = 1,
-MBSize = 1,
-largestSize = max(PlaneSize,max(SphereSize,max(BoxSize,max(TorusSize,MBSize))));
+MBSize = 1;
 const float distOutFCCAM =30.f,
 GlowValue = 200.,
 Glowscale = 4.,
@@ -23,8 +22,8 @@ ColorSetting  		= true,
 ShadowSetting 		= true,
 SphereSetting 		= true,
 PlaneSetting  		= false,
-BoxSetting 	  		= false,
-TorusSetting		= false,
+BoxSetting 	  		= true,
+TorusSetting		= true,
 MBSetting			= false;
 
 struct Camera{vec3 V,C;}C;
@@ -55,17 +54,11 @@ float dots(vec3 l,vec3 l1)
 {return (l1.x*l.x+l1.y*l.y+l1.z*l.z)/(abs(l1.x*l1.x+l1.y*l1.y+l1.z*l1.z));}
 float angle(vec3 I,vec3 O)
 {return atan(dots(I,O)/(length(I)*length(O)));}
-float smin(vec2 o, float k) 
-{float h = clamp(0.5 + 0.5*(o.x-o.y)/k, 0.0, 1.0);
-return mix(o.x, o.y, h) - k*h*(1.0-h);}
+float smin(float a, float b, float k) 
+{float h = clamp(0.5 + 0.5*(a-b)/k, 0.0, 1.0);
+return mix(a, b, h) - k*h*(1.0-h);}
 float smoothclamp(float I,float min,float max,float err)
 {return 1./(1.+pow(2.71828,((4.*I*err)-(2.*err*(min+max)))/(-1.*(max-min))));}
-vec4 Lmin(float L[largestSize],int Index){
-float s=L[0],s1=L[0],s2=L[0],s3=L[0];
-for (int i = 0; i < Index; i++){
-for (int i =  Index; i < 0; i--){
-if (L[i]<s){s3=s2;s2=s1;s1=s;s=L[i];}}}
-return vec4(s,s1,s2,s3);}
 vec3 rotate( vec3 pos, float x, float y, float z ){
 mat3 rotX = mat3( 1.0, 0.0, 0.0, 0.0, cos( x ), -sin( x ), 0.0, sin( x ), cos( x ) );
 mat3 rotY = mat3( cos( y ), 0.0, sin( y ), 0.0, 1.0, 0.0, -sin(y), 0.0, cos(y) );
@@ -109,21 +102,19 @@ return hit*R;
 Data SDFGlobal(vec3 CC,Plane P[PlaneSize],Sphere S[SphereSize],Box B[BoxSize],Torus T[TorusSize],mandelbulb MB[MBSize]){
 float OBJDist[OBJTypeSize];
 int OBJIndex[OBJTypeSize];
-Data OUT;
-float 
-DistP[largestSize];
+Data OUT,SOUT,S1OUT;
 OUT.SDFDist = 10000.;
 for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=OUT.SDFDist,OBJIndex[i]=-1;
 if(SphereSetting==true){
-for(int i=0;i<SphereSize;i++){DistP[i]=SDFSphere(S[i].C,S[i].R,CC);}
-OBJDist[1]=smin(Lmin(DistP,SphereSize).xy,1.);}
-
+for(int i=0;i<SphereSize;i++){//itrates through spheres
+if(OBJDist[1]>SDFSphere(S[i].C,S[i].R,CC)){
+OBJDist[1]=SDFSphere(S[i].C,S[i].R,CC),OBJIndex[1]=i;
+}}}
 if(PlaneSetting==true){
 for(int i=0;i<PlaneSize;i++){//itrates through spheres
 if(OBJDist[2]>SDFPlane(P[i].V,CC)){
 OBJDist[2]=SDFPlane(P[i].V,CC),OBJIndex[2]=i;
 }}}
-
 if(BoxSetting==true){
 for(int i=0;i<PlaneSize;i++){//itrates through spheres
 if(OBJDist[3]>SDFBox(B[i].C,B[i].LWH,B[i].R,CC)){
@@ -175,7 +166,7 @@ CStore = vec3(0);
  B[0].C = vec3(1);
  B[0].LWH = abs(vec3(6,6,2.));
  B[0].S = normalize(B[0].LWH);
- B[0].R = 2.*(sin(iTime)+.75);
+ B[0].R = 2.*(sin(iTime));
 MB[0].S = vec3(1,.5,1);
 MB[0].C = vec3(0);
 MB[0].R = 1.;
@@ -205,7 +196,7 @@ S[x].C = vec3(
 4.*(modf(floor(float(x)/float(SphereSquare)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5),
 0);
 S[x].C += vec3( 0,0,(sin(S[x].C.x+iTime)+cos(S[x].C.y+iTime))/3.);
-S[x].R =2.f;
+S[x].R =3.f;
 S[x].S = vec3(
 ((S[x].C.x+float(SphereSquare)*.5)/float(SphereSquare)),
 ((S[x].C.y+float(SphereSquare)*.5)/float(SphereSquare)),
