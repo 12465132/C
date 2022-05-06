@@ -151,22 +151,23 @@ return normalize(N);}
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
 
-vec3 fragColorStore = vec3(1),
-CStore = vec3(0);
+vec3 fragColorStore = vec3(0),
+CStore = vec3(0),
+N;
 	// Normalized pixel coordinates (from 0 to 1)
  L.C = 20.*vec3(cos(iTime),sin(iTime),.5);
  L.S = vec3(1,1,1);
  P[0].V = vec3(0,1,-4);
  P[0].S = vec3(.8);
  T[0].V = 10.*vec3(0,0,1);
- T[0].C = vec3(0);
+ T[0].C = vec3(0,0,-2);
  T[0].S = vec3(sin(iTime)+.5,cos(iTime)+.5,cos(iTime)+.5);
  T[0].R1= 4.0*(sin(iTime)+2.);
  T[0].R2= 1.0*(cos(iTime)+1.5);
- B[0].C = vec3(1);
- B[0].LWH = abs(vec3(6,6,2.));
+ B[0].C = vec3(9);
+ B[0].LWH = abs(vec3(6,6,3.));
  B[0].S = normalize(B[0].LWH);
- B[0].R = 2.*(sin(iTime));
+ B[0].R = 2.*(sin(iTime)+1.);
 MB[0].S = vec3(1,.5,1);
 MB[0].C = vec3(0);
 MB[0].R = 1.;
@@ -181,7 +182,7 @@ cos(heightCAM));
 //	cos(.333*iTime),
 //	cos(heightCAM));
 C.V = -C.C;
-
+CStore = C.C;
 vec2 uv = fragCoord/iResolution.xy-.5;
 uv.y *= float(iResolution.y/iResolution.x);
 
@@ -196,7 +197,7 @@ S[x].C = vec3(
 4.*(modf(floor(float(x)/float(SphereSquare)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5),
 0);
 S[x].C += vec3( 0,0,(sin(S[x].C.x+iTime)+cos(S[x].C.y+iTime))/3.);
-S[x].R =3.f;
+S[x].R =1.;
 S[x].S = vec3(
 ((S[x].C.x+float(SphereSquare)*.5)/float(SphereSquare)),
 ((S[x].C.y+float(SphereSquare)*.5)/float(SphereSquare)),
@@ -265,7 +266,7 @@ fragColorStore = vec3(
 	}
 	x=int(stepcount);
 
-			}else if(length(C.C)>100.f){
+			}else if(length(C.C-CStore)>6000.f){
 //fragColorStore = vec3(GlowMultValue);
 x=int(stepcount);		   			   }
 C.C+=(C.V*distOut);
@@ -275,13 +276,12 @@ GlowMultValue *= smoothclamp(GlowMultValue,2.,GlowValue,Glowscale)-
 	  GlowMult2*smoothclamp(GlowMultValue,2.,GlowValue2,Glowscale2);
 GlowMultValue *= (float((2*int(GlowSign)-1))*float(GlowSetting));
 fragColorStore += vec3(GlowMultValue);
-if(ShadowSetting==true)
-{fragColorStore = -vec3(angle(C.V,genNormal(C.C,P,S,B,T,MB)));
-fragColorStore = -vec3(genNormal(C.C,P,S,B,T,MB)-.5);
-}	
+if(ShadowSetting==true){}	
 //fragColorStore = ((genNormal(C.C,P,S,B)));
+//fragColorStore = -vec3(genNormal(C.C,P,S,B,T,MB)-.5);
 
-C.V = C.C;
+N = genNormal(C.C,P,S,B,T,MB);
+C.V = C.V-2.*dot(C.V,N)*N;
 CStore = C.C;
 C.V = normalize(C.V); 
 typeindex = -1;
@@ -294,29 +294,66 @@ D = init();
 
 for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=distOut,OBJIndex[i]=-1;
 
-for(int x=0;x<shadowstepcount;x++){//
- 
+for(int x=0;x<int(stepcount);x++){//
+
 D = SDFGlobal(C.C,P,S,B,T,MB);
 
-C.C+=(C.V*D.SDFDist);
-if(D.SDFDist<MinStoreDist){
-MinStoreDist=D.SDFDist;
-distOut = length(C.C-CStore);
+distOut = D.SDFDist;
+typeindex = D.typeindex;
+index = D.index;
 Xindex = x;
-}
 
-if(x>3){
-// if(distOut<.001){
-// x=int(shadowstepcount);
-// //fragColorStore = vec3(0);	
-// }
-}
-if(distOut>100.) {
-x=int(shadowstepcount);
-//fragColorStore = vec3(0);	
-}
-}
 
+if (distOut<.01&&!(x<300)){
+	switch (typeindex) {
+	case 1:
+fragColorStore = vec3(
+(S[index].S.r*float(ColorSetting)),
+(S[index].S.g*float(ColorSetting)),
+(S[index].S.b*float(ColorSetting)));
+		break;
+	case 2:
+fragColorStore = vec3(
+(P[index].S.r*float(ColorSetting)),
+(P[index].S.g*float(ColorSetting)),
+(P[index].S.b*float(ColorSetting)));
+		break;
+	case 3:
+fragColorStore = vec3(
+(B[index].S.r*float(ColorSetting)),
+(B[index].S.g*float(ColorSetting)),
+(B[index].S.b*float(ColorSetting)));
+		break;
+	case 4:
+fragColorStore = vec3(
+(T[index].S.r*float(ColorSetting)),
+(T[index].S.g*float(ColorSetting)),
+(T[index].S.b*float(ColorSetting)));
+		break;
+	case 5:
+fragColorStore = vec3(
+(MB[index].S.r*float(ColorSetting)),
+(MB[index].S.g*float(ColorSetting)),
+(MB[index].S.b*float(ColorSetting)));
+		break;
+	default:
+//fragColorStore = vec3(GlowMultValue);
+		break;
+	}
+	x=int(stepcount);
+
+			}else if(length(C.C)>5000.f){
+//fragColorStore = vec3(GlowMultValue);
+x=int(stepcount);		   			   }
+C.C+=(C.V*distOut);
+}
+GlowMultValue = (float(Xindex));
+GlowMultValue *= smoothclamp(GlowMultValue,2.,GlowValue,Glowscale)-
+	 GlowMult2*smoothclamp(GlowMultValue,2.,GlowValue2,Glowscale2);
+GlowMultValue *= (float((2*int(GlowSign)-1))*float(GlowSetting));
+fragColorStore += vec3(GlowMultValue);
+if(ShadowSetting==true){}	
+//fragColorStore = -vec3(genNormal(C.C,P,S,B,T,MB)-.5);
 
 
 
