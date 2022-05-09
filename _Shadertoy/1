@@ -1,30 +1,38 @@
 #define pi 3.1415926535897932384626433832795
-const int SphereSquare =4;
+#define hash21(p) fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453)
+#define hash33(p) fract(sin( (p) * mat3( 127.1,311.7,74.7 , 269.5,183.3,246.1 , 113.5,271.9,124.6) ) *43758.5453123)
 const int 
-OBJTypeSize = 6,
-SphereSize = SphereSquare*SphereSquare,
-PlaneSize  = 1,
-BoxSize = 1,
-TorusSize = 1,
-MBSize = 1;
-const float distOutFCCAM =30.f,
-GlowValue = 200.,
-Glowscale = 4.,
-GlowValue2 = 100.,
-Glowscale2 = 1.,
-GlowMult2 = .0;
-
-const int shadowstepcount = 10,stepcount = 1000;
+OBJTypeSize 		= 6,
+SphereSize 			= 2,
+PlaneSize  			= 1,
+BoxSize 			= 1,
+TorusSize 			= 1,
+MBSize 				= 1;
+const float //performace <-> precision
+RenderDistance 		= 100.,
+stepcount 			= 100.,
+bouncecount 		= 3.,
+derivativeprecision   = .1;
+const float 
+distOutFCCAM 		= 50.f,
+GlowValue 			= 1000.,
+Glowscale 			= 5.,
+GlowValue2 			= 100.,
+Glowscale2 			= 1.,
+GlowMult2 			= .0,
+reflection			= .8;
 const bool
-GlowSetting   		= false,
-GlowSign	  		= false,
+GlowSetting   		= true,
+GlowSign	  		= true,
 ColorSetting  		= true,
 ShadowSetting 		= true,
+reflectionsetting   = true,
 SphereSetting 		= true,
-PlaneSetting  		= false,
+PlaneSetting  		= true,
 BoxSetting 	  		= true,
-TorusSetting		= true,
-MBSetting			= false;
+TorusSetting		= false,
+MBSetting			= false;//TODO: broken
+
 
 struct Camera{vec3 V,C;}C;
 struct Light{vec3 C,S;}L;
@@ -32,24 +40,16 @@ struct Data{
 float SDFDist;
 int typeindex,index;
 }D;
-struct Plane{vec3 V,S;}P[PlaneSize];
-struct Sphere{
-vec3 C,S;
-float R;
-bvec3 Q;
-}S[SphereSize];
-struct Box{
-vec3 C,LWH,S;
-float R; 
-}B[BoxSize];
-struct Torus{
-vec3 V,C,S;
-float R1,R2;
-}T[TorusSize];
-struct  mandelbulb{vec3 V,C,S;float R;}MB[MBSize];
+struct O{bvec3 Q; vec3 V,S;};//Q = (reflective,refractive,difusive) V is values respectivly
+struct Plane{vec3 V;float H;O O;}P[PlaneSize];
+struct Sphere{vec3 C;float R;O O;}S[SphereSize];
+struct Box{vec3 C,LWH;float R; O O;}B[BoxSize];
+struct Torus{vec3 V,C;float R1,R2;O O;}T[TorusSize];
+struct  mandelbulb{vec3 V,C;float R;O O;}MB[MBSize];
 
 float modf (float x,float y) 
 {return(x - y * floor(x/y));}
+//int test(int c){if(c>0){return test(c-1);}else{return 0;}}
 float dots(vec3 l,vec3 l1)
 {return (l1.x*l.x+l1.y*l.y+l1.z*l.z)/(abs(l1.x*l1.x+l1.y*l1.y+l1.z*l1.z));}
 float angle(vec3 I,vec3 O)
@@ -66,8 +66,8 @@ mat3 rotZ = mat3( cos( z ), -sin( z ), 0.0, sin( z ), cos( z ), 0.0, 0.0, 0.0, 1
 return rotX * rotY * rotZ * pos;}
 vec3 camoffset (vec3 v,vec2 o){return normalize(vec3(v.x,v.y,v.z))+normalize(vec3(-(v.y),(v.x),0.))*o.x+normalize(vec3(-v.z*v.x,-v.z*v.y,v.x*v.x+v.y*v.y))*o.y;}
 Data init(){Data OD;OD.SDFDist = 10000000.,OD.typeindex=-1,OD.index=-1;return OD;}
-float SDFPlane (vec3 p,vec3 c)
- {return abs(dot(p,c)/length(p));}
+float SDFPlane (vec3 p,float h,vec3 c)
+ {return abs(dot(p,c)/length(p)+(h*h));}
 float SDFSphere (vec3 S,float R, vec3 C) 
 {return length(S+C)-R;}
 float SDFBox(vec3 c,vec3 lwh,float r,vec3 C)
@@ -79,7 +79,7 @@ float SDFTorus(vec3 c,vec3 v,float R1,float R2,vec3 p)
 float SDFMB(vec3 C ,float R,vec3 r){
 //r = rotate( r+C, sin(iTime), cos(iTime), 0.0 );
 r = r+C;
-vec3 zn = vec3( r.xyz-C.xyz );
+vec3 zn = vec3( r.xyz );
 float rad = 0.0;
 float hit = 0.0;
 float p = 15.*sin(iTime/10.);
@@ -112,8 +112,8 @@ OBJDist[1]=SDFSphere(S[i].C,S[i].R,CC),OBJIndex[1]=i;
 }}}
 if(PlaneSetting==true){
 for(int i=0;i<PlaneSize;i++){//itrates through spheres
-if(OBJDist[2]>SDFPlane(P[i].V,CC)){
-OBJDist[2]=SDFPlane(P[i].V,CC),OBJIndex[2]=i;
+if(OBJDist[2]>SDFPlane(P[i].V,P[i].H,CC)){
+OBJDist[2]=SDFPlane(P[i].V,P[i].H,CC),OBJIndex[2]=i;
 }}}
 if(BoxSetting==true){
 for(int i=0;i<PlaneSize;i++){//itrates through spheres
@@ -137,73 +137,42 @@ OUT.typeindex=i;
 OUT.index = OBJIndex[i];
 }}
 return OUT;}
+O Pick(int index,int typeindex,bool ColorSetting,Plane NP[PlaneSize],Sphere NS[SphereSize],Box NB[BoxSize],Torus NT[TorusSize],mandelbulb NMB[MBSize]){
+O STORE;
+if(ColorSetting==true){
+switch (typeindex) {
+	  case 1:STORE = NS[index].O;
+break;case 2:STORE = NP[index].O;
+break;case 3:STORE = NB[index].O;
+break;case 4:STORE = NT[index].O;
+break;case 5:STORE = NMB[index].O;
+break;default:STORE.S = vec3(0);STORE.Q = bvec3(false);STORE.V = vec3(0);
+break;}}else{STORE.S = vec3(0);STORE.Q = bvec3(false);STORE.V = vec3(0);}
+return STORE;}
 vec3 genNormal(vec3 NCC,Plane NP[PlaneSize],Sphere NS[SphereSize],Box NB[BoxSize],Torus NT[TorusSize],mandelbulb NMB[MBSize]){
-Data ND;vec2 e = vec2(.01, 0.0);vec3 N,S;
-ND = SDFGlobal(NCC+e.xyy,NP,NS,NB,NT,NMB);
-S.x = ND.SDFDist; 
-ND = SDFGlobal(NCC+e.yxy,NP,NS,NB,NT,NMB);
-S.y = ND.SDFDist; 
-ND = SDFGlobal(NCC+e.yyx,NP,NS,NB,NT,NMB);
-S.z = ND.SDFDist; 
-ND = SDFGlobal(NCC		,NP,NS,NB,NT,NMB);// TODO:optmize
-N = vec3(ND.SDFDist)-S;
-return normalize(N);}
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
-{
-
-vec3 fragColorStore = vec3(0),
+float n;vec2 e = vec2((derivativeprecision), 0.0);vec3 S;
+S.x = SDFGlobal(NCC+e.xyy,NP,NS,NB,NT,NMB).SDFDist;
+S.y = SDFGlobal(NCC+e.yxy,NP,NS,NB,NT,NMB).SDFDist;
+S.z = SDFGlobal(NCC+e.yyx,NP,NS,NB,NT,NMB).SDFDist;
+n   = SDFGlobal(NCC		 ,NP,NS,NB,NT,NMB).SDFDist;// TODO:optmize
+return normalize(n-S);}
+vec3 trace(
+vec3 CC,
+vec3 CV,
+Plane NP[PlaneSize],
+Sphere NS[SphereSize],
+Box NB[BoxSize],
+Torus NT[TorusSize],
+mandelbulb NMB[MBSize]){
+Data DS,DSS[int(bouncecount)];
+Camera C;
+C.V = CV;
+C.C = CC;
+vec3 
+fragColorStore[int(bouncecount)],
+fragColorTotal = vec3(0),
 CStore = vec3(0),
 N;
-	// Normalized pixel coordinates (from 0 to 1)
- L.C = 20.*vec3(cos(iTime),sin(iTime),.5);
- L.S = vec3(1,1,1);
- P[0].V = vec3(0,1,-4);
- P[0].S = vec3(.8);
- T[0].V = 10.*vec3(0,0,1);
- T[0].C = vec3(0,0,-2);
- T[0].S = vec3(sin(iTime)+.5,cos(iTime)+.5,cos(iTime)+.5);
- T[0].R1= 4.0*(sin(iTime)+2.);
- T[0].R2= 1.0*(cos(iTime)+1.5);
- B[0].C = vec3(9);
- B[0].LWH = abs(vec3(6,6,3.));
- B[0].S = normalize(B[0].LWH);
- B[0].R = 2.*(sin(iTime)+1.);
-MB[0].S = vec3(1,.5,1);
-MB[0].C = vec3(0);
-MB[0].R = 1.;
-float heightCAM =(iMouse.y-(iResolution.y))/200.;
-float anglecamradian=-(iMouse.x-(iResolution.x))/40.;
-C.C = distOutFCCAM*vec3(
-sin(heightCAM)*cos(anglecamradian),
-sin(heightCAM)*sin(-anglecamradian),
-cos(heightCAM));
-//C.C = distOutFCCAM*vec3(
-//	sin(.200*iTime),
-//	cos(.333*iTime),
-//	cos(heightCAM));
-C.V = -C.C;
-CStore = C.C;
-vec2 uv = fragCoord/iResolution.xy-.5;
-uv.y *= float(iResolution.y/iResolution.x);
-
-C.V = normalize(C.V);
-C.V = camoffset(C.V,vec2(uv.x,-uv.y));
-C.V = normalize(C.V); 
-
-
-for(int x=0;x<SphereSize;x++){
-S[x].C = vec3( 
-4.*(modf(floor(float(x)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5), 
-4.*(modf(floor(float(x)/float(SphereSquare)),float(SphereSquare))-(float(SphereSquare)/2.f)+.5),
-0);
-S[x].C += vec3( 0,0,(sin(S[x].C.x+iTime)+cos(S[x].C.y+iTime))/3.);
-S[x].R =1.;
-S[x].S = vec3(
-((S[x].C.x+float(SphereSquare)*.5)/float(SphereSquare)),
-((S[x].C.y+float(SphereSquare)*.5)/float(SphereSquare)),
-((S[x].C.z+float(SphereSquare)*.5)/float(SphereSquare)));
-}
-
 float distOut   = 10000.,
 StoreDist = distOut,
 MinStoreDist = distOut,
@@ -213,73 +182,11 @@ int
 OBJIndex[OBJTypeSize],
 typeindex = -1,
 index = -1,
-Xindex = -1;
-
-
+Xindex = -1,
+Bindex = -1;
+for(int b=0;b<int(bouncecount);b++){
 for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=distOut,OBJIndex[i]=-1;
-
-for(int x=0;x<int(stepcount);x++){//
-
-D = SDFGlobal(C.C,P,S,B,T,MB);
-
-distOut = D.SDFDist;
-typeindex = D.typeindex;
-index = D.index;
-Xindex = x;
-
-
-if (distOut<.01){
-	switch (typeindex) {
-	case 1:
-fragColorStore = vec3(
-(S[index].S.r*float(ColorSetting)),
-(S[index].S.g*float(ColorSetting)),
-(S[index].S.b*float(ColorSetting)));
-		break;
-	case 2:
-fragColorStore = vec3(
-(P[index].S.r*float(ColorSetting)),
-(P[index].S.g*float(ColorSetting)),
-(P[index].S.b*float(ColorSetting)));
-		break;
-	case 3:
-fragColorStore = vec3(
-(B[index].S.r*float(ColorSetting)),
-(B[index].S.g*float(ColorSetting)),
-(B[index].S.b*float(ColorSetting)));
-		break;
-	case 4:
-fragColorStore = vec3(
-(T[index].S.r*float(ColorSetting)),
-(T[index].S.g*float(ColorSetting)),
-(T[index].S.b*float(ColorSetting)));
-		break;
-	case 5:
-fragColorStore = vec3(
-(MB[index].S.r*float(ColorSetting)),
-(MB[index].S.g*float(ColorSetting)),
-(MB[index].S.b*float(ColorSetting)));
-		break;
-	default:
-//fragColorStore = vec3(GlowMultValue);
-		break;
-	}
-	x=int(stepcount);
-
-			}else if(length(C.C-CStore)>6000.f){
-//fragColorStore = vec3(GlowMultValue);
-x=int(stepcount);		   			   }
-C.C+=(C.V*distOut);
-}
-GlowMultValue = (float(Xindex));
-GlowMultValue *= smoothclamp(GlowMultValue,2.,GlowValue,Glowscale)-
-	  GlowMult2*smoothclamp(GlowMultValue,2.,GlowValue2,Glowscale2);
-GlowMultValue *= (float((2*int(GlowSign)-1))*float(GlowSetting));
-fragColorStore += vec3(GlowMultValue);
-if(ShadowSetting==true){}	
-//fragColorStore = ((genNormal(C.C,P,S,B)));
-//fragColorStore = -vec3(genNormal(C.C,P,S,B,T,MB)-.5);
-
+if(b!=0){
 N = genNormal(C.C,P,S,B,T,MB);
 C.V = C.V-2.*dot(C.V,N)*N;
 CStore = C.C;
@@ -289,11 +196,7 @@ index = -1;
 distOut   = 10000.;
 StoreDist = distOut;
 D = init();
-
-
-
-for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=distOut,OBJIndex[i]=-1;
-
+}
 for(int x=0;x<int(stepcount);x++){//
 
 D = SDFGlobal(C.C,P,S,B,T,MB);
@@ -302,63 +205,123 @@ distOut = D.SDFDist;
 typeindex = D.typeindex;
 index = D.index;
 Xindex = x;
+Bindex = b;
 
-
-if (distOut<.01&&!(x<300)){
-	switch (typeindex) {
-	case 1:
-fragColorStore = vec3(
-(S[index].S.r*float(ColorSetting)),
-(S[index].S.g*float(ColorSetting)),
-(S[index].S.b*float(ColorSetting)));
-		break;
-	case 2:
-fragColorStore = vec3(
-(P[index].S.r*float(ColorSetting)),
-(P[index].S.g*float(ColorSetting)),
-(P[index].S.b*float(ColorSetting)));
-		break;
-	case 3:
-fragColorStore = vec3(
-(B[index].S.r*float(ColorSetting)),
-(B[index].S.g*float(ColorSetting)),
-(B[index].S.b*float(ColorSetting)));
-		break;
-	case 4:
-fragColorStore = vec3(
-(T[index].S.r*float(ColorSetting)),
-(T[index].S.g*float(ColorSetting)),
-(T[index].S.b*float(ColorSetting)));
-		break;
-	case 5:
-fragColorStore = vec3(
-(MB[index].S.r*float(ColorSetting)),
-(MB[index].S.g*float(ColorSetting)),
-(MB[index].S.b*float(ColorSetting)));
-		break;
-	default:
-//fragColorStore = vec3(GlowMultValue);
-		break;
-	}
+if (distOut<.1){
+if(b==0){
+	fragColorStore[b] = Pick(index,typeindex,ColorSetting,P,S,B,T,MB).S;
 	x=int(stepcount);
+}else if((DS.typeindex!=D.typeindex||DS.index!=D.index)){
+	if(DS.typeindex==4&&x>10000){
+	fragColorStore[b] = Pick(index,typeindex,ColorSetting,P,S,B,T,MB).S;
+	x=int(stepcount);	
+	}else{
+	fragColorStore[b] = Pick(index,typeindex,ColorSetting,P,S,B,T,MB).S;
+	x=int(stepcount);	
+	}
 
-			}else if(length(C.C)>5000.f){
+}
+
+}else if(length(C.C-CStore)>float(RenderDistance)){
 //fragColorStore = vec3(GlowMultValue);
-x=int(stepcount);		   			   }
+x=int(stepcount);
+b=int(bouncecount);}
 C.C+=(C.V*distOut);
 }
-GlowMultValue = (float(Xindex));
+DSS[b]=D;
+DS=D;
+GlowMultValue = (float(Xindex)*distOut);
 GlowMultValue *= smoothclamp(GlowMultValue,2.,GlowValue,Glowscale)-
-	 GlowMult2*smoothclamp(GlowMultValue,2.,GlowValue2,Glowscale2);
+	  GlowMult2*smoothclamp(GlowMultValue,2.,GlowValue2,Glowscale2);
 GlowMultValue *= (float((2*int(GlowSign)-1))*float(GlowSetting));
-fragColorStore += vec3(GlowMultValue);
-if(ShadowSetting==true){}	
-//fragColorStore = -vec3(genNormal(C.C,P,S,B,T,MB)-.5);
+fragColorStore[b] += vec3(GlowMultValue);
+if(ShadowSetting==true){}
+}
+//fragColorTotal = (fragColorStore[0]);
+if(reflectionsetting==true){
+for (int i = Bindex-1; i > -1; i--)
+//for (int i = 0; i < bouncecount; i++)
+{fragColorTotal =
+ //(float(max(i,1))*.1)*
+ ((1.-reflection)*fragColorTotal+
+(reflection*fragColorStore[i]));
+}}
+
+return fragColorTotal;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord ){
+//test(5);
+vec3 ALavg = vec3(0);
+
+	// Normalized pixel coordinates (from 0 to 1)
+ L.C = 20.*vec3(cos(iTime),sin(iTime),.5);
+ L.S = vec3(1,1,1);
+ P[0].V = vec3(0,0,-1);
+ P[0].O.S = vec3(.7);
+ P[0].H = 0.1;
+ P[0].O.Q = bvec3(true,false,false);
+ P[0].O.V = vec3(.9,0,0);
+ T[0].V = 10.*vec3(0,0,1);
+ T[0].C = vec3(0,0,5);
+ T[0].O.S = (vec3(.1,.1,.3));
+ T[0].R1= 32.;
+ T[0].R2= 2.;
+ T[0].O.Q = bvec3(true,false,false);
+ T[0].O.V = vec3(.7,0,0);
+ B[0].C = vec3(0,0,(-3.));
+ B[0].LWH = abs(vec3(20,20,3.));
+ B[0].O.S = vec3(1);
+ B[0].R = 2.*(sin(iTime));
+ B[0].O.Q = bvec3(true,false,false);
+ B[0].O.V = vec3(.6,0,0);
+MB[0].O.S = vec3(1,.5,1);
+MB[0].C = vec3(5);
+MB[0].R = 1.;
+ S[0].O.Q = bvec3(true,false,false);
+ S[0].O.S =  vec3(.2);
+ S[0].R   =  3.;
+ S[0].C   = vec3(sin(iTime)*S[0].R,cos(iTime)*S[0].R,S[0].R);
+ S[1].O.Q = bvec3(true,false,false);
+ S[1].O.S =  vec3(.88);
+ S[1].R   =  S[0].R;
+ S[1].C   = vec3(-sin(iTime)*S[0].R,-cos(iTime)*S[0].R,S[0].R);
+// for(int x=0;x<SphereSize;x++){
+// S[x].C = 1.*vec3( 
+// 4.*(modf(floor(float(x)),sqrt(float(SphereSize)))-(sqrt(float(SphereSize))/2.f)+.5), 
+// 4.*(modf(floor(float(x)/sqrt(float(SphereSize))),sqrt(float(SphereSize)))-(sqrt(float(SphereSize))/2.f)+.5),
+// 0);
+// S[x].C += 5.*vec3( 0,0,+(sin(S[x].C.x+iTime)+cos(S[x].C.y+iTime))/3.)-3.;
+// S[x].R =1.+2.*sin(iTime+sin(S[x].C.x)-cos(S[x].C.z));
+// S[x].O.S = vec3(
+// ((S[x].C.x+sqrt(float(SphereSize))*.5)/sqrt(float(SphereSize))),
+// ((S[x].C.y+sqrt(float(SphereSize))*.5)/sqrt(float(SphereSize))),
+// ((S[x].C.z+sqrt(float(SphereSize))*.5)/sqrt(float(SphereSize))));
+// S[x].O.Q = bvec3(bool(x%2),false,false);
+// S[x].O.V = vec3(sin(iTime)*.5+.5,0,0);
+// }
+
+float heightCAM =(iMouse.y-(iResolution.y))/200.;
+float anglecamradian=-(iMouse.x-(iResolution.x))/40.;
+C.C = distOutFCCAM*vec3(
+sin(heightCAM)*cos(anglecamradian),
+sin(heightCAM)*sin(-anglecamradian),
+cos(heightCAM));
+
+C.V = -C.C;
+//CStore = C.C;
+vec2 uv = fragCoord/iResolution.xy-.5;
+uv.y *= float(iResolution.y/iResolution.x);
+//C.V = normalize(camoffset(normalize(C.V),vec2(uv.x,-uv.y))); 
 
 
 
-
-//fragColorStore /= 2.;
-fragColor = vec4(fragColorStore,1.);
-	// Output to screen
+// ALavg=( //SLOW !!!
+// trace(C.C,normalize(camoffset(normalize(C.V),vec2(uv.x,-uv.y-.00001))),P,S,B,T,MB)+
+// trace(C.C,normalize(camoffset(normalize(C.V),vec2(uv.x,-uv.y+.00001))),P,S,B,T,MB)+
+// trace(C.C,normalize(camoffset(normalize(C.V),vec2(uv.x-.00001,-uv.y))),P,S,B,T,MB)+
+// trace(C.C,normalize(camoffset(normalize(C.V),vec2(uv.x+.00001,-uv.y))),P,S,B,T,MB)+
+// trace(C.C,normalize(camoffset(normalize(C.V),vec2(uv.x,-uv.y))),P,S,B,T,MB)
+// )/5.;
+fragColor = vec4(trace(C.C,normalize(camoffset(normalize(C.V),vec2(uv.x,-uv.y))),P,S,B,T,MB),1.);
 }
