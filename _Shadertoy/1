@@ -1,3 +1,4 @@
+
 #define pi 3.1415926535897932384626433832795
 #define hash21(p) fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453)
 #define hash33(p) fract(sin( (p) * mat3( 127.1,311.7,74.7 , 269.5,183.3,246.1 , 113.5,271.9,124.6) ) *43758.5453123)
@@ -9,12 +10,12 @@ BoxSize 			= 1,
 TorusSize 			= 1,
 MBSize 				= 1;
 const float //performace <-> precision
-RenderDistance 		= 100.,
+RenderDistance 		= 10.,
 stepcount 			= 100.,
 bouncecount 		= 3.,
 derivativeprecision   = .1;
 const float 
-distOutFCCAM 		= 50.f,
+distOutFCCAM 		= 100.,
 GlowValue 			= 1000.,
 Glowscale 			= 5.,
 GlowValue2 			= 100.,
@@ -22,12 +23,12 @@ Glowscale2 			= 1.,
 GlowMult2 			= .0,
 reflection			= .8;
 const bool
-GlowSetting   		= true,
+GlowSetting   		= false,
 GlowSign	  		= true,
 ColorSetting  		= true,
 ShadowSetting 		= true,
 reflectionsetting   = true,
-SphereSetting 		= true,
+SphereSetting 		= false,
 PlaneSetting  		= true,
 BoxSetting 	  		= true,
 TorusSetting		= false,
@@ -67,15 +68,15 @@ return rotX * rotY * rotZ * pos;}
 vec3 camoffset (vec3 v,vec2 o){return normalize(vec3(v.x,v.y,v.z))+normalize(vec3(-(v.y),(v.x),0.))*o.x+normalize(vec3(-v.z*v.x,-v.z*v.y,v.x*v.x+v.y*v.y))*o.y;}
 Data init(){Data OD;OD.SDFDist = 10000000.,OD.typeindex=-1,OD.index=-1;return OD;}
 float SDFPlane (vec3 p,float h,vec3 c)
- {return abs(dot(p,c)/length(p)+(h*h));}
+ {return length(dot(normalize(p),c-p));}
 float SDFSphere (vec3 S,float R, vec3 C) 
-{return length(S+C)-R;}
+{return length(S-C)-R;}
 float SDFBox(vec3 c,vec3 lwh,float r,vec3 C)
-{vec3 q = abs(C+c) + r - lwh;
+{vec3 q = abs(C-c) + r - lwh;
 return length(max(q,0.0)) + 
 min(max(q.x,max(q.y,q.z)),0.0)-r;}
 float SDFTorus(vec3 c,vec3 v,float R1,float R2,vec3 p)
-{return length(((p+c))-normalize((p+c) - normalize(v)*dot((p+c),normalize(v)))*R1)-R2;}
+{return length(((p-c))-normalize((p-c) - normalize(v)*dot((p-c),normalize(v)))*R1)-R2;}
 float SDFMB(vec3 C ,float R,vec3 r){
 //r = rotate( r+C, sin(iTime), cos(iTime), 0.0 );
 r = r+C;
@@ -257,9 +258,9 @@ vec3 ALavg = vec3(0);
 	// Normalized pixel coordinates (from 0 to 1)
  L.C = 20.*vec3(cos(iTime),sin(iTime),.5);
  L.S = vec3(1,1,1);
- P[0].V = vec3(0,0,-1);
+ P[0].V = vec3(1,-1,-1);
  P[0].O.S = vec3(.7);
- P[0].H = 0.1;
+ P[0].H = -0.5;
  P[0].O.Q = bvec3(true,false,false);
  P[0].O.V = vec3(.9,0,0);
  T[0].V = 10.*vec3(0,0,1);
@@ -281,7 +282,7 @@ MB[0].R = 1.;
  S[0].O.Q = bvec3(true,false,false);
  S[0].O.S =  vec3(.2);
  S[0].R   =  3.;
- S[0].C   = vec3(sin(iTime)*S[0].R,cos(iTime)*S[0].R,S[0].R*(1.-cos(iTime*iTime))/iTime+S[0].R);
+ S[0].C   = vec3(sin(iTime)*S[0].R,cos(iTime)*S[0].R,S[0].R);
  S[1].O.Q = bvec3(true,false,false);
  S[1].O.S =  vec3(.88);
  S[1].R   =  S[0].R;
