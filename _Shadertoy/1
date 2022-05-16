@@ -4,15 +4,15 @@
 #define hash33(p) fract(sin( (p) * mat3( 127.1,311.7,74.7 , 269.5,183.3,246.1 , 113.5,271.9,124.6) ) *43758.5453123)
 const int 
 OBJTypeSize 		= 6,
-SphereSize 			= 25,
+SphereSize 			= 9,
 PlaneSize  			= 1,
 BoxSize 			= 1,
 TorusSize 			= 1,
 MBSize 				= 1;
 const int //performace <-> precision
 RenderDistance 		= 100,
-stepcount 			= 100,
-bouncecount 		= 3;
+stepcount 			= 70,
+bouncecount 		= 5;
 const float 
 distOutFCCAM 		= 50.f,
 GlowValue 			= 1000.,
@@ -171,8 +171,8 @@ Data DS,DSS[bouncecount];
 Camera C;
 C.V = CV;
 C.C = CC;
+O fragColorStore[bouncecount];
 vec3 
-fragColorStore[bouncecount],
 fragColorTotal = vec3(0),
 CStore = vec3(0),
 N;
@@ -190,6 +190,7 @@ Bindex = -1;
 for(int b=0;b<int(bouncecount);b++){
 for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=distOut,OBJIndex[i]=-1;
 if(b!=0){
+	if(fragColorStore[b-1].Q.x){
 N = genNormal(C.C,P,S,B,T,MB);
 C.V = C.V-2.*dot(C.V,N)*N;
 CStore = C.C;
@@ -199,6 +200,7 @@ index = -1;
 distOut   = 10000.;
 StoreDist = distOut;
 D = init();
+}
 }
 for(int x=0;x<int(stepcount);x++){//
 
@@ -212,14 +214,14 @@ Bindex = b;
 
 if (distOut<.1){
 if(b==0){
-	fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB).S;
+	fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB);
 	x=int(stepcount);
 }else if((DS.typeindex!=D.typeindex||DS.index!=D.index)){
 	if(DS.typeindex==4&&x>10000){
-	fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB).S;
+	fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB);
 	x=int(stepcount);	
 	}else{
-	fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB).S;
+	fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB);
 	x=int(stepcount);	
 	}
 
@@ -231,15 +233,23 @@ x=int(stepcount);
 b=(bouncecount);		   			   }
 C.C+=(C.V*distOut);
 }
+if(!reflectionsetting){b=(bouncecount);}
 DSS[b]=D;
 DS=D;
 GlowMultValue = (float(Xindex)*distOut);
 GlowMultValue *= smoothclamp(GlowMultValue,2.,GlowValue,Glowscale)-
 	  GlowMult2*smoothclamp(GlowMultValue,2.,GlowValue2,Glowscale2);
 GlowMultValue *= (float((2*int(GlowSign)-1))*float(GlowSetting));
-fragColorStore[b] += vec3(GlowMultValue);
+fragColorStore[b].S += vec3(GlowMultValue);
 if(ShadowSetting==true){}
+//if(b!=0){
+//if(fragColorStore[b].Q.x)
+//{b=(bouncecount);}
+//}
+//if(fragColorStore[b].Q.y){b=(bouncecount);}
+//if(fragColorStore[b].Q.z){b=(bouncecount);}}
 }
+
 //fragColorTotal = (fragColorStore[0]);
 if(reflectionsetting==true){
 for (int i = Bindex-1; i > -1; i--)
@@ -247,8 +257,8 @@ for (int i = Bindex-1; i > -1; i--)
 {fragColorTotal =
  //(float(max(i,1))*.1)*
  ((1.-reflection)*fragColorTotal+
-(reflection*fragColorStore[i]));
-}}
+(reflection*fragColorStore[i].S));
+}}else{fragColorTotal = fragColorStore[0].S;}
 
 return fragColorTotal;
 }
