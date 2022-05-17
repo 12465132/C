@@ -2,7 +2,7 @@
 #define pi 3.1415926535897932384626433832795
 const int 
 OBJTypeSize 		= 6,
-SphereSize 			= 9,
+SphereSize 			= 20,
 PlaneSize  			= 1,
 BoxSize 			= 1,
 TorusSize 			= 1,
@@ -312,17 +312,17 @@ MB[0].O.S = vec3(1,.5,1);
 MB[0].C = vec3(5);
 MB[0].R = 1.;
 for(int x=0;x<SphereSize;x++){
-S[x].C = 10.*vec3(
-(hash11(float(x+1+RandomO+rand))),
-(hash11(float(x+2+RandomO+rand))),
-(hash11(float(x+3+RandomO+rand))));
+S[x].C = 100.*vec3(
+(hash11(float(x+1+RandomO+rand))-.5),
+(hash11(float(x+2+RandomO+rand))-.5),
+(hash11(float(x+3+RandomO+rand))-.5));
 S[x].C += 4.*vec3( 0,0,(sin(S[x].C.x+iTime)+cos(S[x].C.y+iTime))/2.);
 S[x].R =2.+2.*hash11(float(x-6))+2.*sin(iTime+sin(S[x].C.x)-cos(S[x].C.z));
 S[x].O.S = vec3(
-(hash11(float(x-1+RandomO+rand))),
-(hash11(float(x-2+RandomO+rand))),
-(hash11(float(x-3+RandomO+rand))));
-S[x].O.Q = bvec3(bool(x%2),false,false);
+(hash11(float(x-1+RandomO+rand+int((iTime/10.))))),
+(hash11(float(x-2+RandomO+rand+int((iTime/10.))))),
+(hash11(float(x-3+RandomO+rand+int((iTime/10.))))));
+S[x].O.Q = bvec3(float(x)>(float(SphereSize)*.5),false,false);
 S[x].O.V = vec3(sin(iTime)*.5+.5,0,0);
 }
 
