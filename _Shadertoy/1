@@ -1,14 +1,13 @@
 
 #define pi 3.1415926535897932384626433832795
-#define hash21(p) fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453)
-#define hash33(p) fract(sin( (p) * mat3( 127.1,311.7,74.7 , 269.5,183.3,246.1 , 113.5,271.9,124.6) ) *43758.5453123)
 const int 
 OBJTypeSize 		= 6,
 SphereSize 			= 9,
 PlaneSize  			= 1,
 BoxSize 			= 1,
 TorusSize 			= 1,
-MBSize 				= 1;
+MBSize 				= 1,
+RandomO		 		= 1;
 const int //performace <-> precision
 RenderDistance 		= 100,
 stepcount 			= 70,
@@ -46,6 +45,25 @@ struct Box{vec3 C,LWH;float R; O O;}B[BoxSize];
 struct Torus{vec3 V,C;float R1,R2;O O;}T[TorusSize];
 struct  mandelbulb{vec3 V,C;float R;O O;}MB[MBSize];
 
+float hash11(float p)
+{
+    p = fract(p * .1031);
+    p *= p + 33.33;
+    p *= p + p;
+    return fract(p);
+}
+vec3 hash31(float p)
+{
+   vec3 p3 = fract(vec3(p) * vec3(.1031, .1030, .0973));
+   p3 += dot(p3, p3.yzx+33.33);
+   return fract((p3.xxy+p3.yzz)*p3.zyx); 
+}
+vec3 hash32(vec2 p)
+{
+	vec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
+    p3 += dot(p3, p3.yxz+33.33);
+    return fract((p3.xxy+p3.yzz)*p3.zyx);
+}
 float modf (float x,float y) 
 {return(x - y * floor(x/y));}
 //int test(int c){if(c>0){return test(c-1);}else{return 0;}}
@@ -266,7 +284,7 @@ return fragColorTotal;
 }
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord ){
-//test(5);
+int rand = int(iTime);
 vec3 ALavg = vec3(0);
 
 	// Normalized pixel coordinates (from 0 to 1)
@@ -284,7 +302,7 @@ vec3 ALavg = vec3(0);
  T[0].R2= 2.;
  T[0].O.Q = bvec3(true,false,false);
  T[0].O.V = vec3(.7,0,0);
- B[0].C = vec3(10,0,(17.));
+ B[0].C = vec3(15,0,(5.));
  B[0].LWH = (vec3(10));
  B[0].O.S = vec3(1);
  B[0].R = 7.5*(sin(iTime)+1.);
@@ -294,16 +312,16 @@ MB[0].O.S = vec3(1,.5,1);
 MB[0].C = vec3(5);
 MB[0].R = 1.;
 for(int x=0;x<SphereSize;x++){
-S[x].C = 1.*vec3( 
-4.*(modf(floor(float(x)),sqrt(float(SphereSize)))-(sqrt(float(SphereSize))/2.f)+.5), 
-4.*(modf(floor(float(x)/sqrt(float(SphereSize))),sqrt(float(SphereSize)))-(sqrt(float(SphereSize))/2.f)+.5),
-0);
-S[x].C += 5.*vec3( 0,0,+(sin(S[x].C.x+iTime)+cos(S[x].C.y+iTime))/3.)-3.;
-S[x].R =1.+2.*sin(iTime+sin(S[x].C.x)-cos(S[x].C.z));
+S[x].C = 10.*vec3(
+(hash11(float(x+1+RandomO+rand))),
+(hash11(float(x+2+RandomO+rand))),
+(hash11(float(x+3+RandomO+rand))));
+S[x].C += 4.*vec3( 0,0,(sin(S[x].C.x+iTime)+cos(S[x].C.y+iTime))/2.);
+S[x].R =2.+2.*hash11(float(x-6))+2.*sin(iTime+sin(S[x].C.x)-cos(S[x].C.z));
 S[x].O.S = vec3(
-((S[x].C.x+sqrt(float(SphereSize))*.5)/sqrt(float(SphereSize))),
-((S[x].C.y+sqrt(float(SphereSize))*.5)/sqrt(float(SphereSize))),
-((S[x].C.z+sqrt(float(SphereSize))*.5)/sqrt(float(SphereSize))));
+(hash11(float(x-1+RandomO+rand))),
+(hash11(float(x-2+RandomO+rand))),
+(hash11(float(x-3+RandomO+rand))));
 S[x].O.Q = bvec3(bool(x%2),false,false);
 S[x].O.V = vec3(sin(iTime)*.5+.5,0,0);
 }
@@ -330,5 +348,5 @@ uv.y *= float(iResolution.y/iResolution.x);
 // trace(C.C,normalize(camoffset(normalize(C.V),vec2(uv.x+.00001,-uv.y))),P,S,B,T,MB)+
 // trace(C.C,normalize(camoffset(normalize(C.V),vec2(uv.x,-uv.y))),P,S,B,T,MB)
 // )/5.;
-fragColor = vec4(trace(C.C,normalize(camoffset(normalize(C.V),vec2(uv.x,-uv.y))),P,S,B,T,MB),1.);
+fragColor = vec4(trace(C.C,normalize(camoffset(normalize(C.V),vec2(uv.x,-uv.y))),P,S,B,T,MB),.5);
 }
