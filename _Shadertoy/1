@@ -2,7 +2,7 @@
 #define pi 3.1415926535897932384626433832795
 const int 
 OBJTypeSize 		= 6,
-SphereSize 			= 20,
+SphereSize 			= 10,
 PlaneSize  			= 1,
 BoxSize 			= 1,
 TorusSize 			= 1,
@@ -19,7 +19,7 @@ Glowscale 			= 5.,
 GlowValue2 			= 100.,
 Glowscale2 			= 1.,
 GlowMult2 			= .0,
-reflection			= .8;
+reflection			= .7;
 const bool
 GlowSetting   		= false,
 GlowSign	  		= true,
@@ -271,14 +271,14 @@ if(ShadowSetting==true){}
 }
 
 //fragColorTotal = (fragColorStore[0]);
-if(reflectionsetting==true){
-for (int i = Bindex-1; i > -1; i--)
-//for (int i = 0; i < bouncecount; i++)
-{fragColorTotal =
- //(float(max(i,1))*.1)*
- ((1.-reflection)*fragColorTotal+
-(reflection*fragColorStore[i].S));
-}}else{fragColorTotal = fragColorStore[0].S;}
+if(reflectionsetting!=true){
+	fragColorTotal = fragColorStore[0].S;
+}else{
+for (int i = -1; i < Bindex; i++)
+{
+fragColorTotal =((1.-fragColorStore[i].V.x)*fragColorTotal+(fragColorStore[i].V.x*fragColorStore[i].S));
+//fragColorTotal = ((fragColorStore[i].S));
+}}
 
 return fragColorTotal;
 }
@@ -290,12 +290,18 @@ vec3 ALavg = vec3(0);
 	// Normalized pixel coordinates (from 0 to 1)
  L.C = 20.*vec3(cos(iTime),sin(iTime),.5);
  L.S = vec3(1,1,1);
- P[0].V = vec3(0,0,-17);
- P[0].O.S = vec3(.7);
- P[0].H = 7.;
+ P[0].V = vec3(0,0,-7);
+ P[0].O.S = vec3(
+	 sin(71.*3.14*iTime*.001),
+	 cos(73.*3.14*iTime*.001),
+	 sin(79.*3.14*iTime*.001));
+ P[0].H = 5.;
  P[0].O.Q = bvec3(true,false,false);
- P[0].O.V = vec3(.9,0,0);
- T[0].V = 10.*vec3(0,0,1);
+ P[0].O.V = vec3(10.,0,0);
+ T[0].V = vec3(
+	 cos(.05*iTime*05.),
+	 sin(.05*iTime*23.),
+	 cos(.05*iTime*13.));
  T[0].C = vec3(0,0,5);
  T[0].O.S = (vec3(.1,.1,.3));
  T[0].R1= 6.;
@@ -317,7 +323,7 @@ S[x].C = 100.*vec3(
 (hash11(float(x+2+RandomO+rand))-.5),
 (hash11(float(x+3+RandomO+rand))-.5));
 S[x].C += 4.*vec3( 0,0,(sin(S[x].C.x+iTime)+cos(S[x].C.y+iTime))/2.);
-S[x].R =2.+2.*hash11(float(x-6))+2.*sin(iTime+sin(S[x].C.x)-cos(S[x].C.z));
+S[x].R =4.+2.*hash11(float(x-6))+2.*sin(iTime+sin(S[x].C.x)-cos(S[x].C.z));
 S[x].O.S = vec3(
 (hash11(float(x-1+RandomO+rand+int((iTime/10.))))),
 (hash11(float(x-2+RandomO+rand+int((iTime/10.))))),
