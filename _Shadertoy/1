@@ -11,7 +11,7 @@ RandomO		 		= 1;
 const int //performace <-> precision
 RenderDistance 		= 100,
 stepcount 			= 70,
-bouncecount 		= 4;
+bouncecount 		=5;
 const float 
 distOutFCCAM 		= 40.f,
 GlowValue 			= 1000.,
@@ -270,13 +270,13 @@ if(ShadowSetting==true){}
 //if(fragColorStore[b].Q.z){b=(bouncecount);}}
 }
 
-//fragColorTotal = (fragColorStore[0]);
+fragColorTotal = (fragColorStore[0].S);
 if(reflectionsetting!=true){
-	fragColorTotal = fragColorStore[0].S;
+	// fragColorTotal = fragColorStore[0].S;
 }else{
-for (int i = -1; i < Bindex; i++)
+for (int i = 0; i < Bindex; i++)
 {
-fragColorTotal =((1.-fragColorStore[i].V.x)*fragColorTotal+(fragColorStore[i].V.x*fragColorStore[i].S));
+fragColorTotal =((1.-fragColorStore[i+1].V.x)*fragColorTotal+(fragColorStore[i+1].V.x*fragColorStore[i].S));
 //fragColorTotal = ((fragColorStore[i].S));
 }}
 
@@ -297,7 +297,7 @@ vec3 ALavg = vec3(0);
 	 sin(79.*3.14*iTime*.001));
  P[0].H = 5.;
  P[0].O.Q = bvec3(true,false,false);
- P[0].O.V = vec3(10.,0,0);
+ P[0].O.V = vec3(1.,0,0);
  T[0].V = vec3(
 	 cos(.05*iTime*05.),
 	 sin(.05*iTime*23.),
@@ -310,10 +310,10 @@ vec3 ALavg = vec3(0);
  T[0].O.V = vec3(.7,0,0);
  B[0].C = vec3(15,0,(5.));
  B[0].LWH = (vec3(10));
- B[0].O.S = vec3(1);
- B[0].R = 7.5*(sin(iTime)+1.);
+ B[0].O.S = vec3(.6);
+ B[0].R = 0.*(sin(iTime)+1.);
  B[0].O.Q = bvec3(true,false,false);
- B[0].O.V = vec3(.6,0,0);
+ B[0].O.V = vec3(1.,0,0);
 MB[0].O.S = vec3(1,.5,1);
 MB[0].C = vec3(5);
 MB[0].R = 1.;
