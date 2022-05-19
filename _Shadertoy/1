@@ -175,35 +175,31 @@ N = vec3(SDFGlobal(NCC+e.yyy,NP,NS,NB,NT,NMB).SDFDist)-S;
 return normalize(N);}
 void RayTrace(
 float min,float max,int stepcount,
-out float NXindex,
-Data D,
-Camera C,
+inout int NXindex,inout vec3 CStore,
+inout Data MD,
+inout Camera C,
 Plane NP[PlaneSize],
 Sphere NS[SphereSize],
 Box NB[BoxSize],
 Torus NT[TorusSize],
 mandelbulb NMB[MBSize]){
- D = init();
-vec3 CStore = C.C;
+
+ MD = init();
+CStore = C.C;
 C.V = normalize(C.V); 
 int typeindex = -1;
-int index = -1;
+NXindex = -1;
 float distOut   = 10000.;
 float StoreDist = distOut;
-D = SDFGlobal(C.C,P,S,B,T,MB);
 for(int x=0;x<(stepcount);x++){//
-
-D = SDFGlobal(C.C,P,S,B,T,MB);
-NXindex = float(x);
-
-if (D.SDFDist<min)
-{x=int(stepcount);}
+MD = SDFGlobal(C.C,P,S,B,T,MB);
+NXindex = (x);
+if (MD.SDFDist<min)
+{x=int(stepcount);return;}
 else if(length(C.C-CStore)>max)
-{x=int(stepcount);}
-C.C+=(C.V*D.SDFDist);
-
-}
-// return D;	
+{x=int(stepcount);CStore=vec3(length(C.C-CStore),0,0);return;}
+C.C+=(C.V*MD.SDFDist);
+}	
 }
 vec3 trace(
 vec3 CC,
@@ -236,11 +232,9 @@ Bindex = -1;
 for(int b=0;b<int(bouncecount);b++){
 for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=distOut,OBJIndex[i]=-1;
 if(b!=0){
-	if(fragColorStore[b-1].Q.x){
+if(fragColorStore[b-1].Q.x){
 N = genNormal(C.C,P,S,B,T,MB);
 C.V = C.V-2.*dot(C.V,N)*N;
-//C.V = C.V+N;
-
 CStore = C.C;
 C.V = normalize(C.V); 
 typeindex = -1;
@@ -251,24 +245,22 @@ D = init();
 }
 }
 RayTrace(
-.1,float(RenderDistance),int(stepcount),Xindex,
-C,
-P,
-S,
-B,
-T,
-MB);
+.1,
+float(RenderDistance),
+int(stepcount),
+Xindex,CStore,
+D,C,P,S,B,T,MB);
+Bindex=b;
 if (D.SDFDist<.1){
 if(b==0){
-fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB);
+fragColorStore[b] = ColorPick(D.index,D.typeindex,ColorSetting,P,S,B,T,MB);
 }else if((DS.typeindex!=D.typeindex||DS.index!=D.index)){
-fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB);
+fragColorStore[b] = ColorPick(D.index,D.typeindex,ColorSetting,P,S,B,T,MB);
 }
-}else if(length(C.C-CStore)>float(RenderDistance)){
-b=(bouncecount);}
-
+}else if(length(CStore)>float(RenderDistance)){
+b=(bouncecount);
+}
 //if(!reflectionsetting){b=(bouncecount);}
-
 DSS[b]=D;
 DS=D;
 GlowMultValue = (float(Xindex)*distOut);
