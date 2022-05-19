@@ -167,17 +167,44 @@ break;default:STORE.S = vec3(0);STORE.Q = bvec3(false);STORE.V = vec3(0);
 break;}}else{STORE.S = vec3(0);STORE.Q = bvec3(false);STORE.V = vec3(0);}
 return STORE;}
 vec3 genNormal(vec3 NCC,Plane NP[PlaneSize],Sphere NS[SphereSize],Box NB[BoxSize],Torus NT[TorusSize],mandelbulb NMB[MBSize]){
-Data ND;vec2 e = vec2(.1, 0.0);vec3 N,S;
-ND = SDFGlobal(NCC+e.xyy,NP,NS,NB,NT,NMB);
-S.x = ND.SDFDist; 
-ND = SDFGlobal(NCC+e.yxy,NP,NS,NB,NT,NMB);
-S.y = ND.SDFDist; 
-ND = SDFGlobal(NCC+e.yyx,NP,NS,NB,NT,NMB);
-S.z = ND.SDFDist; 
-ND = SDFGlobal(NCC		,NP,NS,NB,NT,NMB);// TODO:optmize
-N = vec3(ND.SDFDist)-S;
+Data ND;vec2 e = vec2(.1, 0.);vec3 N,S;
+S.x = SDFGlobal(NCC+e.xyy,NP,NS,NB,NT,NMB).SDFDist;
+S.y = SDFGlobal(NCC+e.yxy,NP,NS,NB,NT,NMB).SDFDist;
+S.z = SDFGlobal(NCC+e.yyx,NP,NS,NB,NT,NMB).SDFDist;
+N = vec3(SDFGlobal(NCC+e.yyy,NP,NS,NB,NT,NMB).SDFDist)-S;
 return normalize(N);}
+void RayTrace(
+float min,float max,int stepcount,
+out float NXindex,
+Data D,
+Camera C,
+Plane NP[PlaneSize],
+Sphere NS[SphereSize],
+Box NB[BoxSize],
+Torus NT[TorusSize],
+mandelbulb NMB[MBSize]){
+ D = init();
+vec3 CStore = C.C;
+C.V = normalize(C.V); 
+int typeindex = -1;
+int index = -1;
+float distOut   = 10000.;
+float StoreDist = distOut;
+D = SDFGlobal(C.C,P,S,B,T,MB);
+for(int x=0;x<(stepcount);x++){//
 
+D = SDFGlobal(C.C,P,S,B,T,MB);
+NXindex = float(x);
+
+if (D.SDFDist<min)
+{x=int(stepcount);}
+else if(length(C.C-CStore)>max)
+{x=int(stepcount);}
+C.C+=(C.V*D.SDFDist);
+
+}
+// return D;	
+}
 vec3 trace(
 vec3 CC,
 vec3 CV,
@@ -223,38 +250,25 @@ StoreDist = distOut;
 D = init();
 }
 }
-for(int x=0;x<int(stepcount);x++){//
-
-D = SDFGlobal(C.C,P,S,B,T,MB);
-
-distOut = D.SDFDist;
-typeindex = D.typeindex;
-index = D.index;
-Xindex = x;
-Bindex = b;
-
-if (distOut<.1){
+RayTrace(
+.1,float(RenderDistance),int(stepcount),Xindex,
+C,
+P,
+S,
+B,
+T,
+MB);
+if (D.SDFDist<.1){
 if(b==0){
-	fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB);
-	x=int(stepcount);
+fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB);
 }else if((DS.typeindex!=D.typeindex||DS.index!=D.index)){
-	if(DS.typeindex==4&&x>10000){
-	fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB);
-	x=int(stepcount);	
-	}else{
-	fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB);
-	x=int(stepcount);	
-	}
-
+fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB);
 }
-
 }else if(length(C.C-CStore)>float(RenderDistance)){
-//fragColorStore = vec3(GlowMultValue);
-x=int(stepcount);
-b=(bouncecount);		   			   }
-C.C+=(C.V*distOut);
-}
-if(!reflectionsetting){b=(bouncecount);}
+b=(bouncecount);}
+
+//if(!reflectionsetting){b=(bouncecount);}
+
 DSS[b]=D;
 DS=D;
 GlowMultValue = (float(Xindex)*distOut);
@@ -271,7 +285,7 @@ if(reflectionsetting!=true){
 }else{
 for (int i = 0; i < Bindex; i++)
 {
-fragColorTotal =((1.-fragColorStore[i+1].V.x)*fragColorTotal+(fragColorStore[i+1].V.x*fragColorStore[i].S));
+fragColorTotal =((1.-fragColorStore[i].V.x)*fragColorTotal+(fragColorStore[i].V.x*fragColorStore[i].S));
 //fragColorTotal = ((fragColorStore[i-1].S));
 }}
 
