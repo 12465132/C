@@ -1,17 +1,16 @@
-
 #define pi 3.1415926535897932384626433832795
 const int 
 OBJTypeSize 		= 6,
-SphereSize 			= 4,
+SphereSize 			= 20,
 PlaneSize  			= 1,
 BoxSize 			= 1,
 TorusSize 			= 1,
 MBSize 				= 1,
 RandomO		 		= 1;
 const int //performace <-> precision
-RenderDistance 		= 500,
-stepcount 			= 100,
-bouncecount 		=4;
+RenderDistance 		= 100,
+stepcount 			= 70,
+bouncecount 		= 4;
 const float 
 distOutFCCAM 		= 40.f,
 GlowValue 			= 1000.,
@@ -19,7 +18,7 @@ Glowscale 			= 5.,
 GlowValue2 			= 100.,
 Glowscale2 			= 1.,
 GlowMult2 			= .0,
-reflection			= .7;
+reflection			= .8;
 const bool
 GlowSetting   		= false,
 GlowSign	  		= true,
@@ -167,38 +166,16 @@ break;default:STORE.S = vec3(0);STORE.Q = bvec3(false);STORE.V = vec3(0);
 break;}}else{STORE.S = vec3(0);STORE.Q = bvec3(false);STORE.V = vec3(0);}
 return STORE;}
 vec3 genNormal(vec3 NCC,Plane NP[PlaneSize],Sphere NS[SphereSize],Box NB[BoxSize],Torus NT[TorusSize],mandelbulb NMB[MBSize]){
-Data ND;vec2 e = vec2(.1, 0.);vec3 N,S;
-	S.x = SDFGlobal(NCC+e.xyy,NP,NS,NB,NT,NMB).SDFDist;
-	S.y = SDFGlobal(NCC+e.yxy,NP,NS,NB,NT,NMB).SDFDist;
-	S.z = SDFGlobal(NCC+e.yyx,NP,NS,NB,NT,NMB).SDFDist;
-N =  vec3(SDFGlobal(NCC+e.yyy,NP,NS,NB,NT,NMB).SDFDist)-S;
+Data ND;vec2 e = vec2(.1, 0.0);vec3 N,S;
+ND = SDFGlobal(NCC+e.xyy,NP,NS,NB,NT,NMB);
+S.x = ND.SDFDist; 
+ND = SDFGlobal(NCC+e.yxy,NP,NS,NB,NT,NMB);
+S.y = ND.SDFDist; 
+ND = SDFGlobal(NCC+e.yyx,NP,NS,NB,NT,NMB);
+S.z = ND.SDFDist; 
+ND = SDFGlobal(NCC		,NP,NS,NB,NT,NMB);// TODO:optmize
+N = vec3(ND.SDFDist)-S;
 return normalize(N);}
-void RayTrace(
-float min,float max,int Nstepcount,
-inout int NXindex,inout vec3 CStore,
-inout Data MD,
-inout Camera C,
-Plane NP[PlaneSize],
-Sphere NS[SphereSize],
-Box NB[BoxSize],
-Torus NT[TorusSize],
-mandelbulb NMB[MBSize]){
-Data MS = init();
- MD = init();
-CStore = C.C;
-C.V = normalize(C.V); 
-NXindex = -1;
-float distOut   = max;
-float StoreDist = distOut;
-for(int x=0;x<(Nstepcount);x++){//
-MS = SDFGlobal(C.C,P,S,B,T,MB);
-NXindex = (x);
-if (MS.SDFDist<min&&MD.index!=MS.index&&MD.typeindex!=MS.typeindex)
-{MD = MS;return;}
-MD = MS;
-C.C+=(C.V*MS.SDFDist);
-}	
-}
 vec3 trace(
 vec3 CC,
 vec3 CV,
@@ -230,9 +207,11 @@ Bindex = -1;
 for(int b=0;b<int(bouncecount);b++){
 for(int i=1;i<OBJTypeSize;i++) OBJDist[i]=distOut,OBJIndex[i]=-1;
 if(b!=0){
-if(fragColorStore[b-1].Q.x){
+	if(fragColorStore[b-1].Q.x){
 N = genNormal(C.C,P,S,B,T,MB);
 C.V = C.V-2.*dot(C.V,N)*N;
+//C.V = C.V+N;
+
 CStore = C.C;
 C.V = normalize(C.V); 
 typeindex = -1;
@@ -242,35 +221,64 @@ StoreDist = distOut;
 D = init();
 }
 }
-RayTrace(.001,float(RenderDistance),int(stepcount),Xindex,CStore,D,C,P,S,B,T,MB);
-Bindex=b;
-DSS[b]=D;
-DS=D;
-if (D.SDFDist<.001)
-{fragColorStore[b] = ColorPick(D.index,D.typeindex,ColorSetting,P,S,B,T,MB);}
-//else if(length(CStore)>float(RenderDistance)){
-//fragColorStore[b] = ColorPick(D.index,D.typeindex,ColorSetting,P,S,B,T,MB);
-//b=(bouncecount);}
-//if(!reflectionsetting){b=(bouncecount);}
-// GlowMultValue = (float(Xindex)*distOut);
-// GlowMultValue *= smoothclamp(GlowMultValue,2.,GlowValue,Glowscale)-
-// 	  GlowMult2*smoothclamp(GlowMultValue,2.,GlowValue2,Glowscale2);
-// GlowMultValue *= (float((2*int(GlowSign)-1))*float(GlowSetting));
-// fragColorStore[b].S += vec3(GlowMultValue);
+for(int x=0;x<int(stepcount);x++){//
+
+D = SDFGlobal(C.C,P,S,B,T,MB);
+
+distOut = D.SDFDist;
+typeindex = D.typeindex;
+index = D.index;
+Xindex = x;
+Bindex = b;
+
+
+if (distOut<.1){
+if(b==0){
+	fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB);
+	x=int(stepcount);
+}else if((DS.typeindex!=D.typeindex&&DS.index!=D.index)){
+	if(x>10000){
+	fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB);
+	x=int(stepcount);	
+	}else{
+	fragColorStore[b] = ColorPick(index,typeindex,ColorSetting,P,S,B,T,MB);
+	x=int(stepcount);	
+	}
 
 }
 
-fragColorTotal = (fragColorStore[0].S);
-if(reflectionsetting!=true){
-	// fragColorTotal = fragColorStore[0].S;
-}else{
-for (int i = 0; i < Bindex; i++)
-{
-fragColorTotal =
-((1.-fragColorStore[i].V.x)*fragColorTotal+
-    fragColorStore[i].V.x*(fragColorStore[i].S));
-//fragColorTotal = ((fragColorStore[i-1].S));
-}}
+}else if(length(C.C-CStore)>float(RenderDistance)){
+//fragColorStore = vec3(GlowMultValue);
+x=int(stepcount);
+b=(bouncecount);		   			   }
+C.C+=(C.V*distOut);
+}
+if(!reflectionsetting){b=(bouncecount);}
+DSS[b]=D;
+DS=D;
+GlowMultValue = (float(Xindex)*distOut);
+GlowMultValue *= smoothclamp(GlowMultValue,2.,GlowValue,Glowscale)-
+	  GlowMult2*smoothclamp(GlowMultValue,2.,GlowValue2,Glowscale2);
+GlowMultValue *= (float((2*int(GlowSign)-1))*float(GlowSetting));
+fragColorStore[b].S += vec3(GlowMultValue);
+if(ShadowSetting==true){}
+//if(b!=0){
+//if(fragColorStore[b].Q.x)
+//{b=(bouncecount);}
+//}
+//if(fragColorStore[b].Q.y){b=(bouncecount);}
+//if(fragColorStore[b].Q.z){b=(bouncecount);}}
+}
+
+//fragColorTotal = (fragColorStore[0]);
+if(reflectionsetting==true){
+for (int i = Bindex-1; i > -1; i--)
+//for (int i = 0; i < bouncecount; i++)
+{fragColorTotal =
+ //(float(max(i,1))*.1)*
+ ((1.-reflection)*fragColorTotal+
+(reflection*fragColorStore[i].S));
+}}else{fragColorTotal = fragColorStore[0].S;}
 
 return fragColorTotal;
 }
@@ -282,48 +290,41 @@ vec3 ALavg = vec3(0);
 	// Normalized pixel coordinates (from 0 to 1)
  L.C = 20.*vec3(cos(iTime),sin(iTime),.5);
  L.S = vec3(1,1,1);
- P[0].V = vec3(0,0,-7);
- P[0].O.S = vec3(
-	 sin(71.*3.14*iTime*.001),
-	 cos(73.*3.14*iTime*.001),
-	 sin(79.*3.14*iTime*.001));
- P[0].H = 10.;
+ P[0].V = vec3(0,0,-17);
+ P[0].O.S = vec3(.7);
+ P[0].H = 7.;
  P[0].O.Q = bvec3(true,false,false);
- P[0].O.V = vec3(1.,0,0);
- T[0].V = vec3(
-	 cos(.05*iTime*05.),
-	 sin(.05*iTime*23.),
-	 cos(.05*iTime*13.));
+ P[0].O.V = vec3(.9,0,0);
+ T[0].V = 10.*vec3(0,0,1);
  T[0].C = vec3(0,0,5);
- T[0].O.S = (vec3(.4,.1,.3));
+ T[0].O.S = (vec3(.1,.1,.3));
  T[0].R1= 6.;
  T[0].R2= 2.;
  T[0].O.Q = bvec3(true,false,false);
- T[0].O.V = vec3(.6,0,0);
- B[0].C = vec3(0,0,(-10.));
- B[0].LWH = (vec3(30,30,5));
- B[0].O.S = vec3(1,.65,.29);
- B[0].R = 0.*(sin(iTime)+1.);
+ T[0].O.V = vec3(.7,0,0);
+ B[0].C = vec3(15,0,(5.));
+ B[0].LWH = (vec3(10));
+ B[0].O.S = vec3(1);
+ B[0].R = 7.5*(sin(iTime)+1.);
  B[0].O.Q = bvec3(true,false,false);
- B[0].O.V = vec3(1.,0,0);
-MB[0].O.S = vec3(1);
+ B[0].O.V = vec3(.6,0,0);
+MB[0].O.S = vec3(1,.5,1);
 MB[0].C = vec3(5);
 MB[0].R = 1.;
 for(int x=0;x<SphereSize;x++){
-S[x].C = 20.*vec3(
+S[x].C = 100.*vec3(
 (hash11(float(x+1+RandomO+rand))-.5),
 (hash11(float(x+2+RandomO+rand))-.5),
 (hash11(float(x+3+RandomO+rand))-.5));
 S[x].C += 4.*vec3( 0,0,(sin(S[x].C.x+iTime)+cos(S[x].C.y+iTime))/2.);
-S[x].R =4.+2.*hash11(float(x-6))+2.*sin(iTime+sin(S[x].C.x)-cos(S[x].C.z));
+S[x].R =2.+2.*hash11(float(x-6))+2.*sin(iTime+sin(S[x].C.x)-cos(S[x].C.z));
 S[x].O.S = vec3(
 (hash11(float(x-1+RandomO+rand+int((iTime/10.))))),
 (hash11(float(x-2+RandomO+rand+int((iTime/10.))))),
 (hash11(float(x-3+RandomO+rand+int((iTime/10.))))));
-S[x].O.Q = bvec3(true,false,false);
+S[x].O.Q = bvec3(float(x)>(float(SphereSize)*.5),false,false);
 S[x].O.V = vec3(sin(iTime)*.5+.5,0,0);
 }
-
 
 float heightCAM =(iMouse.y-(iResolution.y))/200.;
 float anglecamradian=-(iMouse.x-(iResolution.x))/40.;
